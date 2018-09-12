@@ -1,2 +1,2 @@
-# external-recommender
-External recommender
+# inception-recommender
+Recommender prototype for inception
