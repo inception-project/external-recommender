@@ -24,11 +24,32 @@ This file is provided as parameter when the sever is started:
 
 `java -jar target/recommender-server.jar --spring.config.location=/path/to/file/with/parameters`
 
-# Requests for training new models and requests for prediction
+## Requests for training new models and requests for prediction
 Once the server runs, requests are servered under `/train` for training and `/predict` for prediction, i.e.
 ```
 # Train requests
 http://yourIp:serverPort/train
 #Prediction requests
 http://yourIp:serverPort/predict
+```
+
+# Data format of train/predict requests
+## Train request
+The format of a train request is expected to be sent as json. The content consists of one or more UIMA CAS `documents` encoded as json array with a base 64 encoding. The `typeSystem` used by these CAS is provided as separate parameter. The `layer` parameter provides the full qualified name of the annotation in the CAS that provides the label information. The `feature` values carries the name of the field within this annotation that shall be used during the training process as label information.
+
+```
+{
+	"layer":"name.of.annotation",
+	"feature":"name.of.feature.in.annotation",
+	"typeSystem":"WwgdmVyc", #Base 64 encoded
+	"documents":["PD9...X]   #Base 64 encoded
+}
+```
+
+# Prediction request
+The prediction request uses an identical json file format as during the training process. The server sends a json array of one or more annotated CAS in XMI data format. The returned values are `not` base64 encoded anymore, i.e.
+
+```
+[ "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xmi:XMI xmlns.....>",
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xmi:XMI xmlns.....> ]
 ```
