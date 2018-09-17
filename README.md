@@ -1,5 +1,5 @@
 # inception-recommender
-Recommender prototype for inception
+External recommender implemented with DKPro Text Classification.
 
 # Setup & Run
 ## How to build the external recommender project
