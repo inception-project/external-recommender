@@ -28,7 +28,7 @@ java
     --spring.config.location=/path/to/file/with/parameters.properties
 ```
 
-Please make sure to use the file ending `.properties` for the configuration file. If you run into RAM issues, assign a suited amount of RAM by providing additionally the `-Xmx=4g` flag before the `-jar ` command for assinging more RAM to the Java Virtual Machine.
+Please make sure to use the file ending `.properties` for the configuration file. If you run into RAM issues, assign a suited amount of RAM by providing additionally the `-Xmx=4g` flag right after the `-jar ` command for assinging more RAM to the Java Virtual Machine.
 
 ## Requests for training new models and requests for prediction
 Once the server runs, requests are servered under `/train` for training and `/predict` for prediction, i.e.
