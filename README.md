@@ -18,18 +18,24 @@ server.port=30500
 ```
 
 `repositoryRoot` is the path to the folder in which the models will be stored. The folder will be created if it does not exist yet.
-`server.port` is the port on which the server listens for request.
+`server.port` is the port on which the server listens for requests.
 
 This file is provided as parameter when the sever is started:
 
-`java -jar target/recommender-server.jar --spring.config.location=/path/to/file/with/parameters`
+```
+java 
+    -jar target/recommender-server.jar 
+    --spring.config.location=/path/to/file/with/parameters.properties
+```
+
+Please make sure to use the file ending `.properties` for the configuration file. If you run into RAM issues, assign a suited amount of RAM by providing additionally the `-Xmx=4g` flag before the `-jar ` command for assinging more RAM to the Java Virtual Machine.
 
 ## Requests for training new models and requests for prediction
 Once the server runs, requests are servered under `/train` for training and `/predict` for prediction, i.e.
 ```
 # Train requests
 http://yourIp:serverPort/train
-#Prediction requests
+# Prediction requests
 http://yourIp:serverPort/predict
 ```
 
