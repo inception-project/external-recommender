@@ -47,12 +47,12 @@ The format of a train request is expected to be sent as json. The content consis
 {
 	"layer":"name.of.annotation",
 	"feature":"name.of.feature.in.annotation",
-	"typeSystem":"WwgdmVyc", #Base 64 encoded
-	"documents":["PD9...X]   #Base 64 encoded
+	"typeSystem":"WwgdmVyc", #Base64 encoded
+	"documents":["PD9...X]   #Base64 encoded
 }
 ```
 
-# Prediction request
+## Prediction request
 The prediction request uses an identical json file format as during the training process. The server sends a json array of one or more annotated CAS in XMI data format. The returned values are `not` base64 encoded anymore, i.e.
 
 ```
