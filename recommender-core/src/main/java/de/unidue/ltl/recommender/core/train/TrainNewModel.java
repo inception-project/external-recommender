@@ -94,10 +94,10 @@ public class TrainNewModel
                           ,create(TargetSurfaceFormContextFeature.class,
                                   TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, 0)
                           	//Using character ngrams will increase training time quite a bit
-//                          ,create(CharacterNGram.class, 
-//                                  CharacterNGram.PARAM_NGRAM_USE_TOP_K, 2500,
-//                                  CharacterNGram.PARAM_NGRAM_MIN_N, 2,
-//                                  CharacterNGram.PARAM_NGRAM_MAX_N, 4)
+                          ,create(CharacterNGram.class, 
+                                  CharacterNGram.PARAM_NGRAM_USE_TOP_K, 2500,
+                                  CharacterNGram.PARAM_NGRAM_MIN_N, 2,
+                                  CharacterNGram.PARAM_NGRAM_MAX_N, 4)
                         )
                 .run();
 
