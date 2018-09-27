@@ -1,5 +1,5 @@
 # inception-recommender
-Recommender prototype for inception
+External recommender implemented with DKPro Text Classification.
 
 # Setup & Run
 ## How to build the external recommender project
@@ -18,18 +18,24 @@ server.port=30500
 ```
 
 `repositoryRoot` is the path to the folder in which the models will be stored. The folder will be created if it does not exist yet.
-`server.port` is the port on which the server listens for request.
+`server.port` is the port on which the server listens for requests.
 
 This file is provided as parameter when the sever is started:
 
-`java -jar target/recommender-server.jar --spring.config.location=/path/to/file/with/parameters`
+```
+java 
+    -jar target/recommender-server.jar 
+    --spring.config.location=/path/to/file/with/parameters.properties
+```
+
+Please make sure to use the *file ending* `.properties` for the configuration file. If you run into RAM issues, assign a suited amount of RAM by providing additionally the `-Xmx=4g` flag right after the `-jar ` command for assinging more RAM to the Java Virtual Machine.
 
 ## Requests for training new models and requests for prediction
-Once the server runs, requests are servered under `/train` for training and `/predict` for prediction, i.e.
+Once the server runs, requests are served under `/train` for training and `/predict` for prediction, i.e.
 ```
 # Train requests
 http://yourIp:serverPort/train
-#Prediction requests
+# Prediction requests
 http://yourIp:serverPort/predict
 ```
 
@@ -41,12 +47,12 @@ The format of a train request is expected to be sent as json. The content consis
 {
 	"layer":"name.of.annotation",
 	"feature":"name.of.feature.in.annotation",
-	"typeSystem":"WwgdmVyc", #Base 64 encoded
-	"documents":["PD9...X]   #Base 64 encoded
+	"typeSystem":"WwgdmVyc", #Base64 encoded
+	"documents":["PD9...X]   #Base64 encoded
 }
 ```
 
-# Prediction request
+## Prediction request
 The prediction request uses an identical json file format as during the training process. The server sends a json array of one or more annotated CAS in XMI data format. The returned values are `not` base64 encoded anymore, i.e.
 
 ```
