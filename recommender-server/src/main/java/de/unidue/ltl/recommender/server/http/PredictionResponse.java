@@ -15,18 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.unidue.ltl.recommender.server.tc.prediction;
+package de.unidue.ltl.recommender.server.http;
 
-import java.io.File;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.unidue.ltl.recommender.server.http.InceptionRequest;
-
-public interface Predictor
+public class PredictionResponse
 {
-    void predict(InceptionRequest req, File model) throws Exception;
+    @JsonProperty("document")
+    private String document;
 
-    List<String> getResults() throws Exception;
-    
-    String getResultsAsJson() throws Exception;
+    public String getDocument()
+    {
+        return document;
+    }
+
+    public void setDocument(String aDocument)
+    {
+        document = aDocument;
+    }
 }

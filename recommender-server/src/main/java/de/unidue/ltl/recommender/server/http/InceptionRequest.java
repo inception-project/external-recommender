@@ -16,10 +16,14 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.unidue.ltl.recommender.server;
+package de.unidue.ltl.recommender.server.http;
 
 public class InceptionRequest
 {
+    private String [] documents;
+    private String typeSystem;
+    private String layer;
+    private String feature;
 
     public String [] getDocuments()
     {
@@ -67,12 +71,4 @@ public class InceptionRequest
     {
         this.feature = feature;
     }
-
-    String [] documents;
-    String typeSystem;
-    String layer;
-    String feature;
-
-    public InceptionRequest() {};
-  
 }

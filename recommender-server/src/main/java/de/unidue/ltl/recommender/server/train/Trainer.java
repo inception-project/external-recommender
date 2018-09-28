@@ -18,7 +18,7 @@
 
 package de.unidue.ltl.recommender.server.train;
 
-import de.unidue.ltl.recommender.server.InceptionRequest;
+import de.unidue.ltl.recommender.server.http.InceptionRequest;
 
 public interface Trainer
 {

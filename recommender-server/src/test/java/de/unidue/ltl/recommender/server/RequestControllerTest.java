@@ -17,12 +17,17 @@
  ******************************************************************************/
 package de.unidue.ltl.recommender.server;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
+import java.io.InputStream;
+import java.util.Base64;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.uima.cas.impl.XmiCasDeserializer;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +41,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.unidue.ltl.recommender.server.http.PredictionResponse;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -88,8 +97,14 @@ public class RequestControllerTest
                 .isOk())
                 .andReturn();
         
-        String contentAsString = result.getResponse().getContentAsString();
-        assertTrue(contentAsString.startsWith("[ \"<?xml version"));
+        String json = result.getResponse().getContentAsString();
+        PredictionResponse response = new ObjectMapper().readValue(json, PredictionResponse.class);
+
+        try (InputStream is = IOUtils.toInputStream(response.getDocument(), "utf-8");
+             InputStream bis = Base64.getDecoder().wrap(is)) {
+            JCas jCas = JCasFactory.createJCas();
+            XmiCasDeserializer.deserialize(bis, jCas.getCas(), true);
+        }
     }
 
 }

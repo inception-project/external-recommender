@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.unidue.ltl.recommender.core.train.TrainNewModel;
-import de.unidue.ltl.recommender.server.InceptionRequest;
+import de.unidue.ltl.recommender.server.http.InceptionRequest;
 import de.unidue.ltl.recommender.server.train.InceptionRecommenderModel;
 import de.unidue.ltl.recommender.server.train.Trainer;
 

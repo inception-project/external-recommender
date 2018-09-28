@@ -111,16 +111,10 @@ public class RoundTripTest
                 .readFileToString(new File("src/test/resources/jsonPredictRequestV2small.txt"), "utf-8");
 
         JsonElement parse = new JsonParser().parse(json);
-
-        JsonElement documents = parse.getAsJsonObject().get("documents");
-        JsonArray asJsonArray = documents.getAsJsonArray();
+        JsonElement document = parse.getAsJsonObject().get("document");
 
         List<String> casBase64 = new ArrayList<>();
-
-        for (int i = 0; i < asJsonArray.size(); i++) {
-            String aCas = asJsonArray.get(i).toString();
-            casBase64.add(aCas.substring(1, aCas.length() - 1));
-        }
+        casBase64.add(document.getAsString());
 
         jcasBase64 = casBase64.toArray(new String[0]);
 

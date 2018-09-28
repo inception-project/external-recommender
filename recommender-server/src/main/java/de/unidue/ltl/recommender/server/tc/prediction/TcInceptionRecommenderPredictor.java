@@ -20,6 +20,7 @@ package de.unidue.ltl.recommender.server.tc.prediction;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -30,7 +31,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.io.Files;
 
 import de.unidue.ltl.recommender.core.predict.PredictionWithModel;
-import de.unidue.ltl.recommender.server.InceptionRequest;
+import de.unidue.ltl.recommender.server.http.InceptionRequest;
+import de.unidue.ltl.recommender.server.http.PredictionResponse;
 
 @Component
 public class TcInceptionRecommenderPredictor
@@ -67,7 +69,7 @@ public class TcInceptionRecommenderPredictor
         
         List<String> casAsString = new ArrayList<>();
         
-        for(File f : files) {
+        for (File f : files) {
             casAsString.add(FileUtils.readFileToString(f, "utf8"));
         }
         
@@ -77,11 +79,19 @@ public class TcInceptionRecommenderPredictor
     public String getResultsAsJson() throws Exception
     {
         List<String> results = getResults();
+
+        if (results.size() != 1) {
+            throw new RuntimeException("Can only handle 1 document in result");
+        }
+
+        PredictionResponse response = new PredictionResponse();
+        byte[] bytes = Base64.getEncoder().encode(results.get(0).getBytes());
+        String xmi = new String(bytes, "utf-8");
+        response.setDocument(xmi);
         
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        String arrayToJson = objectMapper.writeValueAsString(results);
-        return arrayToJson;
+        return objectMapper.writeValueAsString(response);
     }
 
 }
