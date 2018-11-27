@@ -18,13 +18,12 @@
 
 package de.unidue.ltl.recommender.core.util;
 
-import java.io.ByteArrayInputStream;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
@@ -39,40 +38,34 @@ import de.tudarmstadt.ukp.dkpro.core.io.bincas.BinaryCasWriter;
 
 public class CoreUtil
 {
-    
-    public static void serialize(JCas jCas, File name) throws Exception  {
-        
-        FileOutputStream fos = new FileOutputStream(name);
-        XmiCasSerializer.serialize(jCas.getCas(), jCas.getTypeSystem(), fos);
-        fos.close();
+    public static void serialize(JCas jCas, File name) throws Exception
+    {
+        try (FileOutputStream fos = new FileOutputStream(name)) {
+            XmiCasSerializer.serialize(jCas.getCas(), jCas.getTypeSystem(), fos);
+        }
     }
 
     public static JCas deserialize(String casString, File typeSystemXML) throws Exception
     {
-
-        byte[] encoded = Files.readAllBytes(typeSystemXML.toPath());
-        String s = new String(encoded, StandardCharsets.UTF_8);
-
         JCas jcas = JCasFactory.createJCasFromPath(typeSystemXML.getAbsolutePath());
-        try (InputStream bais = new ByteArrayInputStream(casString.getBytes())) {
+        try (InputStream bais = IOUtils.toInputStream(casString, UTF_8)) {
             XmiCasDeserializer.deserialize(bais, jcas.getCas());
         }
         return jcas;
     }
-    
-    public static void writeCasBinary(JCas jcas, TypeSystemDescription typeSystemDesc, File casFolder) throws ResourceInitializationException, AnalysisEngineProcessException
+
+    public static void writeCasBinary(JCas jcas, TypeSystemDescription typeSystemDesc,
+            File casFolder)
+        throws ResourceInitializationException, AnalysisEngineProcessException
     {
-        
         AnalysisEngine xmiWriter = AnalysisEngineFactory.createEngine(
                 BinaryCasWriter.class,
-                typeSystemDesc,
-                BinaryCasWriter.PARAM_TARGET_LOCATION,
-                casFolder.toString(),
+                typeSystemDesc, 
+                BinaryCasWriter.PARAM_TARGET_LOCATION, casFolder.toString(),
                 BinaryCasWriter.PARAM_FORMAT, "6+", 
                 BinaryCasWriter.PARAM_OVERWRITE, true);
-        
+
         xmiWriter.process(jcas);
         xmiWriter.collectionProcessComplete();
     }
-
 }
