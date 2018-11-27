@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
@@ -45,7 +44,7 @@ public class CreateSimpleTestFile
     public static void main(String[] args) throws Exception
     {
         String json = FileUtils
-                .readFileToString(new File("src/test/resources/jsonTrainRequestV2small.txt"), "utf-8");
+                .readFileToString(new File("src/test/resources/jsonTrainRequestV3small.json"), "utf-8");
 
         JsonElement parse = new JsonParser().parse(json);
         
@@ -54,8 +53,8 @@ public class CreateSimpleTestFile
 
         for (int i = 0; i < asJsonArray.size(); i++) {
             String aCas = asJsonArray.get(i).toString();
-            aCas = aCas.substring(1, aCas.length()-1);
-            aCas = new String(Base64.decodeBase64(aCas.getBytes()));
+            aCas = aCas.substring(1, aCas.length() - 1);
+            aCas = new String(aCas.getBytes());
             File toDiscTemp = FileUtil.createTempFile("toDiskRaw", ".txt");
             FileUtils.writeStringToFile(toDiscTemp, aCas, "utf-8");
             FileInputStream fis = new FileInputStream(toDiscTemp);
@@ -64,23 +63,19 @@ public class CreateSimpleTestFile
             fis.close();
             
             List<Sentence> sentences = new ArrayList<Sentence>(JCasUtil.select(createJCas, Sentence.class));
-            for(int j=20; j < sentences.size(); j++) {
+            for(int j = 20; j < sentences.size(); j++) {
                 List<Token> tokens = JCasUtil.selectCovered(createJCas,Token.class, sentences.get(j));
-                tokens.forEach(x->x.removeFromIndexes());
+                tokens.forEach(x -> x.removeFromIndexes());
                 sentences.get(j).removeFromIndexes();
             }
-            
-//            //for prediction - remove NEs
-//            List<NamedEntity> ne = new ArrayList<NamedEntity>(JCasUtil.select(createJCas, NamedEntity.class));
-//            ne.forEach(x->x.removeFromIndexes());
-            
+
             File toDiscClean = FileUtil.createTempFile("toDiskClean", ".txt");
             FileOutputStream fos = new FileOutputStream(toDiscClean);
             XmiCasSerializer.serialize(createJCas.getCas(), fos);
             fos.close();
             
             String shrinkedCas = FileUtils.readFileToString(toDiscClean, "utf-8");
-            shrinkedCas = "\""+Base64.encodeBase64String(shrinkedCas.getBytes()) + "\"";
+            shrinkedCas = "\"" + shrinkedCas + "\"";
             
             asJsonArray.set(i, new JsonParser().parse(shrinkedCas));
             
@@ -91,7 +86,7 @@ public class CreateSimpleTestFile
         String string = parse.getAsJsonObject().toString();
         FileUtils.writeStringToFile(new File(System.getProperty("user.home")+"/Desktop/predictJsonV2small.txt"), string, "utf-8");
 
-//        jcasBase64 = casBase64.toArray(new String[0]);
+//        j cas =  cas.toArray(new String[0]);
 
     }
 

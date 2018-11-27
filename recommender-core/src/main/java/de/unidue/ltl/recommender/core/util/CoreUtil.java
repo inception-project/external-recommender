@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -47,11 +49,14 @@ public class CoreUtil
 
     public static JCas deserialize(String casString, File typeSystemXML) throws Exception
     {
+
+        byte[] encoded = Files.readAllBytes(typeSystemXML.toPath());
+        String s = new String(encoded, StandardCharsets.UTF_8);
+
         JCas jcas = JCasFactory.createJCasFromPath(typeSystemXML.getAbsolutePath());
-        InputStream bais = new ByteArrayInputStream(casString.getBytes());
-        XmiCasDeserializer.deserialize(bais, jcas.getCas());
-        bais.close();
-        
+        try (InputStream bais = new ByteArrayInputStream(casString.getBytes())) {
+            XmiCasDeserializer.deserialize(bais, jcas.getCas());
+        }
         return jcas;
     }
     

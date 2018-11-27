@@ -50,13 +50,13 @@ public class PredictionWithModel
     }
 
     @Override
-    public void run(String [] casBase64, String typeSystemBase64, String annotationName,
+    public void run(String []  cas, String typesystem, String annotationName,
             String annotationFieldName, File model)
         throws Exception
     {
         dkproHome();
 
-        TypeSystemDescription typeSystem = prepare(casBase64, typeSystemBase64);
+        TypeSystemDescription typeSystem = prepare( cas, typesystem);
 
         startPrediction(binCasInputFolder, typeSystem, model, annotationName, annotationFieldName);
 

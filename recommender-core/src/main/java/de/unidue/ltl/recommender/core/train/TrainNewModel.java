@@ -39,21 +39,18 @@ import de.tudarmstadt.ukp.dkpro.core.io.bincas.BinaryCasReader;
 import de.unidue.ltl.recommender.core.DKProTcSkeleton;
 
 public class TrainNewModel
-    extends DKProTcSkeleton
-{
+        extends DKProTcSkeleton {
 
-    public TrainNewModel() throws Exception
-    {
+    public TrainNewModel() throws Exception {
         super();
     }
 
-    public void run(String [] casBase64, String typeSystemBase64, String annotationName,
-            String annotationFieldName, File targetFolder)
-        throws Exception
-    {
+    public void run(String[] cas, String typesystem, String annotationName,
+                    String annotationFieldName, File targetFolder)
+            throws Exception {
         dkproHome();
 
-        TypeSystemDescription typeSystem = prepare(casBase64, typeSystemBase64);
+        TypeSystemDescription typeSystem = prepare(cas, typesystem);
 
         startTraining(binCasInputFolder, typeSystem, targetFolder, annotationName,
                 annotationFieldName);
@@ -62,17 +59,16 @@ public class TrainNewModel
     }
 
     private static void startTraining(File casPredictOutput, TypeSystemDescription typeSystem,
-            File targetFolder, String annotationName, String annotationFieldName)
-        throws Exception
-    {
+                                      File targetFolder, String annotationName, String annotationFieldName)
+            throws Exception {
 
         CollectionReaderDescription trainReader = createReaderDescription(
-        												BinaryCasReader.class,
-        												typeSystem,
-        												BinaryCasReader.PARAM_LANGUAGE, "x-undefined",
-        												BinaryCasReader.PARAM_SOURCE_LOCATION, casPredictOutput.getAbsolutePath(),
-        												BinaryCasReader.PARAM_PATTERNS, "*.bin"
-        											);
+                BinaryCasReader.class,
+                typeSystem,
+                BinaryCasReader.PARAM_LANGUAGE, "x-undefined",
+                BinaryCasReader.PARAM_SOURCE_LOCATION, casPredictOutput.getAbsolutePath(),
+                BinaryCasReader.PARAM_PATTERNS, "*.bin"
+        );
 
         ExperimentBuilder builder = new ExperimentBuilder();
         builder.experiment(ExperimentType.SAVE_MODEL, "InceptionTrain")
@@ -82,23 +78,23 @@ public class TrainNewModel
                 .outputFolder(targetFolder.getAbsolutePath())
                 .machineLearningBackend(
                         new MLBackend(new CrfSuiteAdapter(),
-                                      CrfSuiteAdapter.ALGORITHM_ADAPTIVE_REGULARIZATION_OF_WEIGHT_VECTOR))
+                                CrfSuiteAdapter.ALGORITHM_ADAPTIVE_REGULARIZATION_OF_WEIGHT_VECTOR))
                 .preprocessing(createEngineDescription(
-                               TrainingOutcomeAnnotator.class,
-                               TrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_NAME, annotationName,
-                               TrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME, annotationFieldName))
-                .features( create(TargetSurfaceFormContextFeature.class,
-                                  TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, -2)
-                          ,create(TargetSurfaceFormContextFeature.class,
-                                  TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, -1)
-                          ,create(TargetSurfaceFormContextFeature.class,
-                                  TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, 0)
-                          	//Using character ngrams will increase training time quite a bit
-                          ,create(CharacterNGram.class, 
-                                  CharacterNGram.PARAM_NGRAM_USE_TOP_K, 2500,
-                                  CharacterNGram.PARAM_NGRAM_MIN_N, 2,
-                                  CharacterNGram.PARAM_NGRAM_MAX_N, 4)
-                        )
+                        TrainingOutcomeAnnotator.class,
+                        TrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_NAME, annotationName,
+                        TrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME, annotationFieldName))
+                .features(create(TargetSurfaceFormContextFeature.class,
+                        TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, -2)
+                        , create(TargetSurfaceFormContextFeature.class,
+                                TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, -1)
+                        , create(TargetSurfaceFormContextFeature.class,
+                                TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, 0)
+                        //Using character ngrams will increase training time quite a bit
+                        , create(CharacterNGram.class,
+                                CharacterNGram.PARAM_NGRAM_USE_TOP_K, 2500,
+                                CharacterNGram.PARAM_NGRAM_MIN_N, 2,
+                                CharacterNGram.PARAM_NGRAM_MAX_N, 4)
+                )
                 .run();
 
     }
