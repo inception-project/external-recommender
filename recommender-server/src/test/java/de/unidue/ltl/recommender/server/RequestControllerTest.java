@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.unidue.ltl.recommender.server;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
@@ -66,9 +67,8 @@ public class RequestControllerTest {
     public void trainRequest() throws Exception {
         controllerToTest = mock(RequestController.class);
 
-        String trainRequest = FileUtils.readFileToString(new File(
-                        "src/test/resources/jsonTrainRequestV3small.json"),
-                "utf-8");
+        String trainRequest = FileUtils.readFileToString(
+                new File("src/test/resources/jsonTrainRequestV3small.json"), UTF_8);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/train")
                 .accept(MediaType.APPLICATION_JSON)
@@ -81,8 +81,8 @@ public class RequestControllerTest {
     @Test
     public void predictRequest() throws Exception {
 
-        String predictRequest = FileUtils
-                .readFileToString(new File("src/test/resources/jsonPredictRequestV3small.json"), "utf-8");
+        String predictRequest = FileUtils.readFileToString(
+                new File("src/test/resources/jsonPredictRequestV3small.json"), UTF_8);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/predict")
                 .accept(MediaType.APPLICATION_JSON)
@@ -95,7 +95,7 @@ public class RequestControllerTest {
         String json = result.getResponse().getContentAsString();
         PredictionResponse response = new ObjectMapper().readValue(json, PredictionResponse.class);
 
-        try (InputStream is = IOUtils.toInputStream(response.getDocument(), "utf-8")) {
+        try (InputStream is = IOUtils.toInputStream(response.getDocument(), UTF_8)) {
             JCas jCas = JCasFactory.createJCas();
             XmiCasDeserializer.deserialize(is, jCas.getCas(), true);
         }

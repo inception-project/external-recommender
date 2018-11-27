@@ -24,10 +24,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.pear.util.FileUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.TypeSystemUtil;
-
 import com.google.common.io.Files;
 
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.unidue.ltl.recommender.core.util.CoreUtil;
 
 public abstract class DKProTcSkeleton {
@@ -69,11 +68,17 @@ public abstract class DKProTcSkeleton {
             throws Exception {
         writeTypeSystemToFile(typesystem);
         TypeSystemDescription typeSystemDesc = null;
+        int i = 0;
         for (String cas : casses) {
             JCas jCas = CoreUtil.deserialize(cas, typeSystemXML);
-
-            typeSystemDesc = TypeSystemUtil.typeSystem2TypeSystemDescription(jCas.getTypeSystem());
-            CoreUtil.writeCasBinary(jCas, typeSystemDesc, binCasInputFolder);
+            DocumentMetaData dmd = DocumentMetaData.get(jCas);
+            // INCEpTION sets the documentId to the username which tends to be the same for all
+            // documents from a given user. However, TC uses the documentID to determine if it may
+            // flush some internal caches which can cause JCas wrapper classes to be carried over
+            // across JCas resets. For this reason, we make the documentId unique here.
+            dmd.setDocumentId(dmd.getDocumentId()+i);
+            CoreUtil.writeCasBinary(jCas, binCasInputFolder);
+            i++;
         }
 
         return typeSystemDesc;
