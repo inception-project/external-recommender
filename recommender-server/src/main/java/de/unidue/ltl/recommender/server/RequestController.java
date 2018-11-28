@@ -81,8 +81,8 @@ public class RequestController
     public ResponseEntity<String> executePrediction(@RequestBody PredictionRequest predictionRequest)
     {
         try {
-            String xmlCasArrayAsString = prediction(predictionRequest.toInceptionRequest());
-            return new ResponseEntity<>(xmlCasArrayAsString, HttpStatus.OK);
+            String response = prediction(predictionRequest.toInceptionRequest());
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e) {
             logger.error("Error while training", e);

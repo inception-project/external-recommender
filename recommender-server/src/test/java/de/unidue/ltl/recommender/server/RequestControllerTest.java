@@ -88,8 +88,7 @@ public class RequestControllerTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(predictRequest))
-                .andExpect(MockMvcResultMatchers.status()
-                        .isOk())
+                .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
         String json = result.getResponse().getContentAsString();

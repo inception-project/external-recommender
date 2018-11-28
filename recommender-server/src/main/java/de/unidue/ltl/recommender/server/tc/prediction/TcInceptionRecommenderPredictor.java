@@ -84,8 +84,7 @@ public class TcInceptionRecommenderPredictor
         }
 
         PredictionResponse response = new PredictionResponse();
-        String xmi = response.getDocument();
-        response.setDocument(xmi);
+        response.setDocument(results.get(0));
         
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);

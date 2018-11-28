@@ -67,7 +67,8 @@ public class TrainNewModel
                 typeSystem,
                 BinaryCasReader.PARAM_LANGUAGE, "x-undefined",
                 BinaryCasReader.PARAM_SOURCE_LOCATION, casPredictOutput.getAbsolutePath(),
-                BinaryCasReader.PARAM_PATTERNS, "*.bin"
+                BinaryCasReader.PARAM_PATTERNS, "*.bin",
+                BinaryCasReader.PARAM_OVERRIDE_DOCUMENT_METADATA, true
         );
 
         ExperimentBuilder builder = new ExperimentBuilder();
