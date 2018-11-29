@@ -20,7 +20,6 @@ package de.unidue.ltl.recommender.server.tc.prediction;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -85,9 +84,7 @@ public class TcInceptionRecommenderPredictor
         }
 
         PredictionResponse response = new PredictionResponse();
-        byte[] bytes = Base64.getEncoder().encode(results.get(0).getBytes());
-        String xmi = new String(bytes, "utf-8");
-        response.setDocument(xmi);
+        response.setDocument(results.get(0));
         
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);

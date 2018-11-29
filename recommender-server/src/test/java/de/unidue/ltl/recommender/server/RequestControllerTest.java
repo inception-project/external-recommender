@@ -17,11 +17,11 @@
  ******************************************************************************/
 package de.unidue.ltl.recommender.server;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Base64;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -49,8 +49,7 @@ import de.unidue.ltl.recommender.server.http.PredictionResponse;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(locations = "classpath:test.properties")
-public class RequestControllerTest
-{
+public class RequestControllerTest {
 
     private MockMvc mockMvc;
 
@@ -60,50 +59,44 @@ public class RequestControllerTest
     final String BASE_URL = "http://localhost:8080/";
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         this.mockMvc = MockMvcBuilders.standaloneSetup(controllerToTest).build();
     }
 
     @Test
-    public void trainRequest() throws Exception
-    {
+    public void trainRequest() throws Exception {
         controllerToTest = mock(RequestController.class);
 
-        String trainRequest = FileUtils.readFileToString(new File(
-                "src/test/resources/jsonTrainRequestV2small.txt"),
-                "utf-8");
+        String trainRequest = FileUtils.readFileToString(
+                new File("src/test/resources/jsonTrainRequestV3small.json"), UTF_8);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/train")
-                 .accept(MediaType.APPLICATION_JSON)
-                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                 .content(trainRequest))
-                 .andExpect(MockMvcResultMatchers.status()
-                 .isOk());
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(trainRequest))
+                .andExpect(MockMvcResultMatchers.status()
+                        .isOk());
     }
-    
+
     @Test
-    public void predictRequest() throws Exception
-    {
-        
-        String predictRequest = FileUtils
-                .readFileToString(new File("src/test/resources/jsonPredictRequestV2small.txt"), "utf-8");
+    public void predictRequest() throws Exception {
+
+        String predictRequest = FileUtils.readFileToString(
+                new File("src/test/resources/jsonPredictRequestV3small.json"), UTF_8);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/predict")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(predictRequest))
-                .andExpect(MockMvcResultMatchers.status()
-                .isOk())
+                .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
-        
+
         String json = result.getResponse().getContentAsString();
         PredictionResponse response = new ObjectMapper().readValue(json, PredictionResponse.class);
 
-        try (InputStream is = IOUtils.toInputStream(response.getDocument(), "utf-8");
-             InputStream bis = Base64.getDecoder().wrap(is)) {
+        try (InputStream is = IOUtils.toInputStream(response.getDocument(), UTF_8)) {
             JCas jCas = JCasFactory.createJCas();
-            XmiCasDeserializer.deserialize(bis, jCas.getCas(), true);
+            XmiCasDeserializer.deserialize(is, jCas.getCas(), true);
         }
     }
 

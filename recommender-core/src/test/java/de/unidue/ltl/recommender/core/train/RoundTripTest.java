@@ -36,15 +36,15 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import de.unidue.ltl.recommender.core.predict.PredictionWithModel;
 
 public class RoundTripTest
 {
-    String[] jcasBase64;
-    String typesystemBase64;
+    String[] jcas;
+    String typesystem;
     String annotationName;
     String annotationFieldName;
 
@@ -80,7 +80,7 @@ public class RoundTripTest
     {
         initPredict();
         PredictionWithModel pwm = new PredictionWithModel(resultFolder.getRoot());
-        pwm.run(jcasBase64, typesystemBase64, annotationName, annotationFieldName,
+        pwm.run(jcas, typesystem, annotationName, annotationFieldName,
                 modelLocation.getRoot());
 
         List<File> files = getFiles(resultFolder.getRoot());
@@ -108,24 +108,20 @@ public class RoundTripTest
     private void initPredict() throws IOException
     {
         String json = FileUtils
-                .readFileToString(new File("src/test/resources/jsonPredictRequestV2small.txt"), "utf-8");
+                .readFileToString(new File("src/test/resources/jsonPredictRequestV3small.json"), "utf-8");
 
-        JsonElement parse = new JsonParser().parse(json);
-        JsonElement document = parse.getAsJsonObject().get("document");
+        JsonObject parse = new JsonParser().parse(json).getAsJsonObject();
+        JsonObject document = parse.get("document").getAsJsonObject();
+        JsonObject metadata = parse.get("metadata").getAsJsonObject();
 
-        List<String> casBase64 = new ArrayList<>();
-        casBase64.add(document.getAsString());
+        List<String> cas = new ArrayList<>();
+        cas.add(document.get("xmi").getAsString());
 
-        jcasBase64 = casBase64.toArray(new String[0]);
+        jcas = cas.toArray(new String[0]);
 
-        typesystemBase64 = parse.getAsJsonObject().get("typeSystem").toString();
-        typesystemBase64 = typesystemBase64.substring(1, typesystemBase64.length() - 1);
-
-        annotationName = parse.getAsJsonObject().get("layer").toString();
-        annotationName = annotationName.substring(1, annotationName.length() - 1);
-
-        annotationFieldName = parse.getAsJsonObject().get("feature").toString();
-        annotationFieldName = annotationFieldName.substring(1, annotationFieldName.length() - 1);
+        typesystem = parse.get("typeSystem").getAsString();
+        annotationName = metadata.get("layer").getAsString();
+        annotationFieldName = metadata.get("feature").getAsString();
     }
 
     private void train() throws Exception
@@ -133,11 +129,11 @@ public class RoundTripTest
         initTrain();
         // Train Model
         TrainNewModel m = new TrainNewModel();
-        m.run(jcasBase64, typesystemBase64, annotationName, annotationFieldName,
+        m.run(jcas, typesystem, annotationName, annotationFieldName,
                 modelLocation.getRoot());
         assertTrue(modelLocation.getRoot().exists());
         File theModel = new File(modelLocation.getRoot(), Constants.MODEL_CLASSIFIER);
-        assertTrue(theModel.exists());
+        assertTrue(theModel.getAbsolutePath() + " does not exist", theModel.exists());
     }
 
     private void initTrain() throws IOException
@@ -146,29 +142,26 @@ public class RoundTripTest
 //                .readFileToString(new File(System.getProperty("user.home")+"/Desktop/training.json"), "utf-8");
         
         String json = FileUtils
-                .readFileToString(new File("src/test/resources/jsonTrainRequestV2small.txt"), "utf-8");
+                .readFileToString(new File("src/test/resources/jsonTrainRequestV3small.json"), "utf-8");
 
-        JsonElement parse = new JsonParser().parse(json);
+        JsonObject parse = new JsonParser().parse(json).getAsJsonObject();
+        JsonObject metadata = parse.get("metadata").getAsJsonObject();
 
-        JsonElement documents = parse.getAsJsonObject().get("documents");
-        JsonArray asJsonArray = documents.getAsJsonArray();
+        JsonArray documents = parse.getAsJsonObject().get("documents").getAsJsonArray();
 
-        List<String> casBase64 = new ArrayList<>();
+        List<String> casses = new ArrayList<>();
 
-        for (int i = 0; i < asJsonArray.size(); i++) {
-            String aCas = asJsonArray.get(i).toString();
-            casBase64.add(aCas.substring(1, aCas.length() - 1));
+        for (int i = 0; i < documents.size(); i++) {
+            String aCas = documents.get(i).getAsJsonObject().get("xmi").getAsString();
+            casses.add(aCas);
         }
 
-        jcasBase64 = casBase64.toArray(new String[0]);
+        jcas = casses.toArray(new String[0]);
 
-        typesystemBase64 = parse.getAsJsonObject().get("typeSystem").toString();
-        typesystemBase64 = typesystemBase64.substring(1, typesystemBase64.length() - 1);
+        typesystem = parse.get("typeSystem").getAsString();
 
-        annotationName = parse.getAsJsonObject().get("layer").toString();
-        annotationName = annotationName.substring(1, annotationName.length() - 1);
+        annotationName = metadata.get("layer").getAsString();
 
-        annotationFieldName = parse.getAsJsonObject().get("feature").toString();
-        annotationFieldName = annotationFieldName.substring(1, annotationFieldName.length() - 1);
+        annotationFieldName = metadata.get("feature").getAsString();
     }
 }

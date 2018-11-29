@@ -40,22 +40,5 @@ http://yourIp:serverPort/predict
 ```
 
 # Data format of train/predict requests
-## Train request
-The format of a train request is expected to be sent as json. The content consists of one or more UIMA CAS `documents` encoded as json array with a base 64 encoding. The `typeSystem` used by these CAS is provided as separate parameter. The `layer` parameter provides the full qualified name of the annotation in the CAS that provides the label information. The `feature` values carries the name of the field within this annotation that shall be used during the training process as label information.
 
-```
-{
-	"layer":"name.of.annotation",
-	"feature":"name.of.feature.in.annotation",
-	"typeSystem":"WwgdmVyc", #Base64 encoded
-	"documents":["PD9...X]   #Base64 encoded
-}
-```
-
-## Prediction request
-The prediction request uses an identical json file format as during the training process. The server sends a json array of one or more annotated CAS in XMI data format. The returned values are `not` base64 encoded anymore, i.e.
-
-```
-[ "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xmi:XMI xmlns.....>",
-  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xmi:XMI xmlns.....> ]
-```
+The data format for training and prediction requests is described in the [INCEpTION developer documentation](https://zoidberg.ukp.informatik.tu-darmstadt.de/jenkins/job/INCEpTION%20(GitHub)%20(master)/de.tudarmstadt.ukp.inception.app$inception-app-webapp/doclinks/3/#_external_recommender_api_overview) .

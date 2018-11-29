@@ -17,42 +17,22 @@
  ******************************************************************************/
 package de.unidue.ltl.recommender.server.http;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TrainingRequest {
-    @JsonProperty("layer")
-    private String layer;
-
-    @JsonProperty("feature")
-    private String feature;
 
     @JsonProperty("typeSystem")
     private String typeSystem;
 
     @JsonProperty("documents")
-    private List<String> documents;
+    private List<Document> documents;
 
-    public String getLayer()
-    {
-        return layer;
-    }
-
-    public void setLayer(String aLayer)
-    {
-        layer = aLayer;
-    }
-
-    public String getFeature()
-    {
-        return feature;
-    }
-
-    public void setFeature(String aFeature)
-    {
-        feature = aFeature;
-    }
+    @JsonProperty("metadata")
+    private Metadata metadata;
 
     public String getTypeSystem()
     {
@@ -64,23 +44,33 @@ public class TrainingRequest {
         typeSystem = aTypeSystem;
     }
 
-    public List<String> getDocuments()
+    public List<Document> getDocuments()
     {
         return documents;
     }
 
-    public void setDocuments(List<String> aDocuments)
+    public void setDocuments(List<Document> aDocuments)
     {
         documents = aDocuments;
+    }
+
+    public Metadata getMetadata()
+    {
+        return metadata;
+    }
+
+    public void setMetadata(Metadata aMetadata) {
+        metadata = aMetadata;
     }
 
     public InceptionRequest toInceptionRequest()
     {
         InceptionRequest result = new InceptionRequest();
-        result.setDocuments(documents.toArray(new String[documents.size()]));
+        String [] xmiDocuments = documents.stream().map(Document::getXmi).toArray(String[]::new);
+        result.setDocuments(xmiDocuments);
         result.setTypeSystem(typeSystem);
-        result.setLayer(layer);
-        result.setFeature(feature);
+        result.setLayer(getMetadata().getLayer());
+        result.setFeature(getMetadata().getFeature());
         return result;
     }
 }

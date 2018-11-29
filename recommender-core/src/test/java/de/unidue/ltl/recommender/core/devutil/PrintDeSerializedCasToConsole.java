@@ -17,12 +17,13 @@
  ******************************************************************************/
 package de.unidue.ltl.recommender.core.devutil;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -45,9 +46,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class PrintDeSerializedCasToConsole
 {
     public static void main(String [] args) throws Exception {
-        String json = FileUtils
-                .readFileToString(new File("src/test/resources/jsonTrainRequestV2small.txt"), "utf-8");
-//        String json = FileUtils.readFileToString(new File(System.getProperty("user.home")+"/Desktop/training.json"), "utf-8");
+        String json = FileUtils.readFileToString(
+                new File("src/test/resources/jsonTrainRequestV3small.json"), UTF_8);
 
         JsonElement parse = new JsonParser().parse(json);
         
@@ -63,13 +63,12 @@ public class PrintDeSerializedCasToConsole
         for (int i = 0; i < asJsonArray.size(); i++) {
             String aCas = asJsonArray.get(i).toString();
             aCas = aCas.substring(1, aCas.length()-1);
-            aCas = new String(Base64.decodeBase64(aCas.getBytes()));
             File toDiscTemp = FileUtil.createTempFile("toDiskRaw", ".txt");
-            FileUtils.writeStringToFile(toDiscTemp, aCas, "utf-8");
-            FileInputStream fis = new FileInputStream(toDiscTemp);
+            FileUtils.writeStringToFile(toDiscTemp, aCas, UTF_8);
             JCas aJCas = JCasFactory.createJCas();
-            XmiCasDeserializer.deserialize(fis, aJCas.getCas());
-            fis.close();
+            try (FileInputStream fis = new FileInputStream(toDiscTemp)) {
+                XmiCasDeserializer.deserialize(fis, aJCas.getCas());
+            }
             toDiscTemp.delete();
             
             
