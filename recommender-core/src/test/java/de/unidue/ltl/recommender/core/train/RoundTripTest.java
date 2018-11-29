@@ -36,7 +36,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -134,7 +133,7 @@ public class RoundTripTest
                 modelLocation.getRoot());
         assertTrue(modelLocation.getRoot().exists());
         File theModel = new File(modelLocation.getRoot(), Constants.MODEL_CLASSIFIER);
-        assertTrue(theModel.exists());
+        assertTrue(theModel.getAbsolutePath() + " does not exist", theModel.exists());
     }
 
     private void initTrain() throws IOException
