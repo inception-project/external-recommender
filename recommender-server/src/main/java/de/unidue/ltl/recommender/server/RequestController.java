@@ -19,6 +19,7 @@
 package de.unidue.ltl.recommender.server;
 
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -51,34 +52,58 @@ public class RequestController
 
     @Autowired
     Trainer trainer;
-    
+
     @Autowired
     Predictor predictor;
+
+    Semaphore trainingRunning = new Semaphore(1);
 
     @RequestMapping(value = "/train", method = RequestMethod.POST)
     public ResponseEntity<String> executeTraining(@RequestBody TrainingRequest trainingRequest)
     {
+        if (!trainingRunning.tryAcquire()) {
+            logger.info("Received training request but trainer is currently busy ["
+                    + HttpStatus.TOO_MANY_REQUESTS + "]");
+            return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
+        }
+
         try {
             trainModel(trainingRequest.toInceptionRequest());
         }
         catch (Exception e) {
-            logger.error("Error while training", e);
+            logger.error("Error while training [" + HttpStatus.INTERNAL_SERVER_ERROR + "]", e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    private InceptionRecommenderModel trainModel(InceptionRequest inceptionReq) throws Exception
+    private void trainModel(InceptionRequest inceptionReq) throws Exception
     {
-        InceptionRecommenderModel trainedModel = null;
-        trainedModel = trainer.train(inceptionReq);
-        repository.checkInModel(trainedModel, true);
-        return trainedModel;
+        Runnable runnable = () -> {
+            try {
+                InceptionRecommenderModel trainedModel = null;
+                trainedModel = trainer.train(inceptionReq);
+                repository.checkInModel(trainedModel, true);
+            }
+            catch (Exception e) {
+                logger.error("Model training error occurred [" + e.getMessage() + "]");
+                System.err.println(e);
+            }
+            finally {
+                trainingRunning.release();
+                logger.debug("Semaphore released, remaining number of ["
+                        + trainingRunning.availablePermits() + "] permits available");
+            }
+        };
+        Thread asynch = new Thread(runnable);
+        asynch.start();
+        logger.error("Model training started asynchronously");
     }
 
     @RequestMapping(value = "/predict", method = RequestMethod.POST)
-    public ResponseEntity<String> executePrediction(@RequestBody PredictionRequest predictionRequest)
+    public ResponseEntity<String> executePrediction(
+            @RequestBody PredictionRequest predictionRequest)
     {
         try {
             String response = prediction(predictionRequest.toInceptionRequest());
@@ -103,4 +128,5 @@ public class RequestController
     {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
+    
 }

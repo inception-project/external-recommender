@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -142,7 +143,7 @@ public class RoundTripTest
 //                .readFileToString(new File(System.getProperty("user.home")+"/Desktop/training.json"), "utf-8");
         
         String json = FileUtils
-                .readFileToString(new File("src/test/resources/jsonTrainRequestV3small.json"), "utf-8");
+                .readFileToString(new File("src/test/resources/jsonTrainRequestV3small.json"), StandardCharsets.UTF_8);
 
         JsonObject parse = new JsonParser().parse(json).getAsJsonObject();
         JsonObject metadata = parse.get("metadata").getAsJsonObject();

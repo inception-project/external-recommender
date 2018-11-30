@@ -49,7 +49,8 @@ import de.unidue.ltl.recommender.server.http.PredictionResponse;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(locations = "classpath:test.properties")
-public class RequestControllerTest {
+public class RequestControllerTest
+{
 
     private MockMvc mockMvc;
 
@@ -59,37 +60,37 @@ public class RequestControllerTest {
     final String BASE_URL = "http://localhost:8080/";
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         this.mockMvc = MockMvcBuilders.standaloneSetup(controllerToTest).build();
     }
 
     @Test
-    public void trainRequest() throws Exception {
+    public void trainRequest() throws Exception
+    {
         controllerToTest = mock(RequestController.class);
 
         String trainRequest = FileUtils.readFileToString(
                 new File("src/test/resources/jsonTrainRequestV3small.json"), UTF_8);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/train")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(trainRequest))
-                .andExpect(MockMvcResultMatchers.status()
-                        .isOk());
+        mockMvc.perform(MockMvcRequestBuilders.post("/train").accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON_VALUE).content(trainRequest))
+                .andExpect(MockMvcResultMatchers.status().is(204));
     }
 
     @Test
-    public void predictRequest() throws Exception {
-
+    public void predictRequest() throws Exception
+    {
+        while(trainingIsStillRunning()) {
+            Thread.sleep(1000);
+        }
         String predictRequest = FileUtils.readFileToString(
                 new File("src/test/resources/jsonPredictRequestV3small.json"), UTF_8);
 
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/predict")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(predictRequest))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andReturn();
+        MvcResult result = mockMvc
+                .perform(MockMvcRequestBuilders.post("/predict").accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE).content(predictRequest))
+                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
         String json = result.getResponse().getContentAsString();
         PredictionResponse response = new ObjectMapper().readValue(json, PredictionResponse.class);
@@ -98,6 +99,11 @@ public class RequestControllerTest {
             JCas jCas = JCasFactory.createJCas();
             XmiCasDeserializer.deserialize(is, jCas.getCas(), true);
         }
+    }
+
+    private boolean trainingIsStillRunning()
+    {
+        return controllerToTest.trainingRunning.availablePermits() == 0;
     }
 
 }

@@ -17,9 +17,7 @@
  ******************************************************************************/
 package de.unidue.ltl.recommender.server.http;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
