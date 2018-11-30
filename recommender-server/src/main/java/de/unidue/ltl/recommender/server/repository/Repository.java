@@ -58,6 +58,9 @@ public interface Repository
      * 
      * @param irm
      *          a trained inception recommender model
+     * @param deleteSourceLocation
+     *            if the model at the source location shall be deleted after copying the folder into
+     *            the repository
      * @throws Exception
      *          in case of any error
      */

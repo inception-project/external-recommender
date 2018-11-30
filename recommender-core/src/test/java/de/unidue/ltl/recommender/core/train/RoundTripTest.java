@@ -131,7 +131,7 @@ public class RoundTripTest
         m.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
         assertTrue(modelLocation.exists());
         File theModel = new File(modelLocation, Constants.MODEL_CLASSIFIER);
-        assertTrue(theModel.getAbsolutePath() + " does not exist", theModel.exists());
+        assertTrue(theModel.exists());
     }
 
     private void initTrain() throws IOException
@@ -153,11 +153,8 @@ public class RoundTripTest
         }
 
         jcas = casses.toArray(new String[0]);
-
         typesystem = parse.get("typeSystem").getAsString();
-
         annotationName = metadata.get("layer").getAsString();
-
         annotationFieldName = metadata.get("feature").getAsString();
     }
 }
