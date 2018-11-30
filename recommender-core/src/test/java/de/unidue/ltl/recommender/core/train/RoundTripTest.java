@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,9 +32,7 @@ import org.apache.commons.io.FileUtils;
 import org.dkpro.tc.core.Constants;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -48,24 +47,25 @@ public class RoundTripTest
     String annotationName;
     String annotationFieldName;
 
-    @Rule
-    public TemporaryFolder resultFolder = new TemporaryFolder();
-    @Rule
-    public TemporaryFolder modelLocation = new TemporaryFolder();
+    File resultFolder = null;
+    File modelLocation = null;
 
     @Before
     public void setup() throws Exception
     {
-        modelLocation.create();
-        resultFolder.create();
-        
+        File root = FileUtils.getTempDirectory();
+        resultFolder = new File(root, "resultOut/");
+        resultFolder.mkdir();
+        modelLocation = new File(root, "modelOut/");
+        modelLocation.mkdir();
+
     }
 
     @After
     public void cleanUp() throws IOException
     {
-        modelLocation.delete();
-        resultFolder.delete();
+        FileUtils.deleteQuietly(modelLocation);
+        FileUtils.deleteQuietly(resultFolder);
     }
 
     @Test
@@ -79,11 +79,10 @@ public class RoundTripTest
     private void predict() throws Exception
     {
         initPredict();
-        PredictionWithModel pwm = new PredictionWithModel(resultFolder.getRoot());
-        pwm.run(jcas, typesystem, annotationName, annotationFieldName,
-                modelLocation.getRoot());
+        PredictionWithModel pwm = new PredictionWithModel(resultFolder);
+        pwm.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
 
-        List<File> files = getFiles(resultFolder.getRoot());
+        List<File> files = getFiles(resultFolder);
         assertEquals(1, files.size());
 
         String content = FileUtils.readFileToString(files.get(0), "utf-8");
@@ -107,8 +106,8 @@ public class RoundTripTest
 
     private void initPredict() throws IOException
     {
-        String json = FileUtils
-                .readFileToString(new File("src/test/resources/jsonPredictRequestV3small.json"), "utf-8");
+        String json = FileUtils.readFileToString(
+                new File("src/test/resources/jsonPredictRequestV3small.json"), "utf-8");
 
         JsonObject parse = new JsonParser().parse(json).getAsJsonObject();
         JsonObject document = parse.get("document").getAsJsonObject();
@@ -129,20 +128,17 @@ public class RoundTripTest
         initTrain();
         // Train Model
         TrainNewModel m = new TrainNewModel();
-        m.run(jcas, typesystem, annotationName, annotationFieldName,
-                modelLocation.getRoot());
-        assertTrue(modelLocation.getRoot().exists());
-        File theModel = new File(modelLocation.getRoot(), Constants.MODEL_CLASSIFIER);
-        assertTrue(theModel.getAbsolutePath() + " does not exist", theModel.exists());
+        m.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
+        assertTrue(modelLocation.exists());
+        File theModel = new File(modelLocation, Constants.MODEL_CLASSIFIER);
+        assertTrue(theModel.exists());
     }
 
     private void initTrain() throws IOException
     {
-//        String json = FileUtils
-//                .readFileToString(new File(System.getProperty("user.home")+"/Desktop/training.json"), "utf-8");
-        
-        String json = FileUtils
-                .readFileToString(new File("src/test/resources/jsonTrainRequestV3small.json"), "utf-8");
+        String json = FileUtils.readFileToString(
+                new File("src/test/resources/jsonTrainRequestV3small.json"),
+                StandardCharsets.UTF_8);
 
         JsonObject parse = new JsonParser().parse(json).getAsJsonObject();
         JsonObject metadata = parse.get("metadata").getAsJsonObject();
@@ -157,11 +153,8 @@ public class RoundTripTest
         }
 
         jcas = casses.toArray(new String[0]);
-
         typesystem = parse.get("typeSystem").getAsString();
-
         annotationName = metadata.get("layer").getAsString();
-
         annotationFieldName = metadata.get("feature").getAsString();
     }
 }

@@ -67,7 +67,7 @@ public class PredictionWithModel
             File model, String annotationName, String annotationFieldName)
         throws Exception
     {
-
+        
         logger.info("Start prediction pipeline with model [" + model.getAbsolutePath()
                 + "], results will be stored at [" + predictionOutput.getAbsolutePath() + "]");
 
