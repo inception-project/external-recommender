@@ -26,7 +26,7 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.tc.ml.uima.TcAnnotator;
+import org.dkpro.tc.ml.model.PreTrainedModelProviderSequenceMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,10 +80,10 @@ public class PredictionWithModel
                 .createEngineDescription(TargetSetterAnnotator.class);
 
         AnalysisEngineDescription annotator = AnalysisEngineFactory.createEngineDescription(
-                TcAnnotator.class, TcAnnotator.PARAM_NAME_SEQUENCE_ANNOTATION,
-                Sentence.class.getName(), TcAnnotator.PARAM_NAME_UNIT_ANNOTATION,
-                Token.class.getName(), TcAnnotator.PARAM_TC_MODEL_LOCATION, model,
-                TcAnnotator.PARAM_RETAIN_TARGETS, false);
+                PreTrainedModelProviderSequenceMode.class, PreTrainedModelProviderSequenceMode.PARAM_NAME_SEQUENCE_ANNOTATION,
+                Sentence.class.getName(), PreTrainedModelProviderSequenceMode.PARAM_NAME_TARGET_ANNOTATION,
+                Token.class.getName(), PreTrainedModelProviderSequenceMode.PARAM_TC_MODEL_LOCATION, model,
+                PreTrainedModelProviderSequenceMode.PARAM_RETAIN_TARGETS, false);
 
         AnalysisEngineDescription resultWriter = AnalysisEngineFactory.createEngineDescription(
                 ResultWriterAnnotator.class, ResultWriterAnnotator.PARAM_ANNOTATION_TARGET_NAME,

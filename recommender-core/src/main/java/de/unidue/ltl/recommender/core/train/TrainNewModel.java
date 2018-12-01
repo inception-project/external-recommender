@@ -28,12 +28,12 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.tc.features.ngram.CharacterNGram;
 import org.dkpro.tc.features.tcu.TargetSurfaceFormContextFeature;
-import org.dkpro.tc.ml.builder.ExperimentBuilder;
-import org.dkpro.tc.ml.builder.ExperimentType;
 import org.dkpro.tc.ml.builder.FeatureMode;
 import org.dkpro.tc.ml.builder.LearningMode;
 import org.dkpro.tc.ml.builder.MLBackend;
 import org.dkpro.tc.ml.crfsuite.CrfSuiteAdapter;
+import org.dkpro.tc.ml.experiment.builder.ExperimentBuilder;
+import org.dkpro.tc.ml.experiment.builder.ExperimentType;
 
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.BinaryCasReader;
 import de.unidue.ltl.recommender.core.DKProTcSkeleton;
