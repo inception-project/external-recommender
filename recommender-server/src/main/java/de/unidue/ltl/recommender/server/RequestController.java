@@ -98,7 +98,7 @@ public class RequestController
         };
         Thread asynch = new Thread(runnable);
         asynch.start();
-        logger.error("Model training started asynchronously");
+        logger.info("Model training started asynchronously");
     }
 
     @RequestMapping(value = "/predict", method = RequestMethod.POST)
