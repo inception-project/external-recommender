@@ -132,8 +132,12 @@ public class RoundTripTest
         // Train Model
         TrainNewModel m = new TrainNewModel();
         m.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
-        assertTrue(modelLocation.exists());
         File theModel = new File(modelLocation, Constants.MODEL_CLASSIFIER);
+        
+        for(File f : theModel.getParentFile().listFiles()) {
+            System.err.println(f.getAbsolutePath());
+        }
+        
         LogFactory.getLog(getClass())
                 .debug("Expecting model to be at [" + theModel + "] - file exists ["
                         + theModel.exists() + "], parent folder exists ["
