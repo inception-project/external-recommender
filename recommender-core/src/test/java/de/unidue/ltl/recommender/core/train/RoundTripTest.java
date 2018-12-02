@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.LogFactory;
 import org.dkpro.tc.core.Constants;
 import org.junit.After;
 import org.junit.Before;
@@ -131,6 +132,10 @@ public class RoundTripTest
         m.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
         assertTrue(modelLocation.exists());
         File theModel = new File(modelLocation, Constants.MODEL_CLASSIFIER);
+        LogFactory.getLog(getClass())
+                .debug("Expecting model to be at [" + theModel + "] - file exists ["
+                        + theModel.exists() + "], parent folder exists ["
+                        + theModel.getParentFile().exists() + "]");
         assertTrue(theModel.exists());
     }
 
