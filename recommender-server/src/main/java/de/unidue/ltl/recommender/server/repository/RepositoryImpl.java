@@ -59,12 +59,11 @@ public class RepositoryImpl
     public InceptionRecommenderModel getModel(String id)
     {
         init();
-        logger.debug("Retrieve model with id [" + id + "]");
         Entry entry = rep.getEntry(id);
         
 		if (entry == null) {
 			logger.debug("The requested model with id [" + id + "] was not found");
-			throw new IllegalStateException("Model with id [" + id + "] not found in repository located at ["+ repositoryRoot.getAbsolutePath() +"]");
+			return null;
 		}
         
         return new TcModel(entry.getId(), entry.getTimeStamp(),

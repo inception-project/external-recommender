@@ -57,6 +57,12 @@ public class RequestController
     Predictor predictor;
 
     Semaphore trainingRunning = new Semaphore(1);
+    /*
+     * controls access to the model repository to avoid that a model is read of which a new version
+     * is written in the same moment. We do not keep explicitly track of which model is requested;
+     * we just block all read accesses when a model update is in progress
+     */
+    Semaphore readModelRepPermitted = new Semaphore(1);
 
     @RequestMapping(value = "/train", method = RequestMethod.POST)
     public ResponseEntity<String> executeTraining(@RequestBody TrainingRequest trainingRequest)
@@ -78,48 +84,98 @@ public class RequestController
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    private void trainModel(InceptionRequest inceptionReq) throws Exception
+    private synchronized void trainModel(InceptionRequest inceptionReq) throws Exception
     {
-        Runnable runnable = () -> {
-            try {
-                InceptionRecommenderModel trainedModel = null;
-                trainedModel = trainer.train(inceptionReq);
-                repository.checkInModel(trainedModel, true);
+        Thread t = new Thread(new Runnable()
+        {
+
+            @Override
+            public synchronized void run()
+            {
+                try {
+                    InceptionRecommenderModel trainedModel = null;
+                    trainedModel = trainer.train(inceptionReq);
+                    while (!readModelRepPermitted.tryAcquire()) {
+                        logger.debug(
+                                "Model repository is being read - check-in of new model pending");
+                        wait();
+                    }
+                    repository.checkInModel(trainedModel, true);
+                }
+                catch (Exception e) {
+                    logger.error(
+                            "Model training error occurred [" + e.getStackTrace().toString() + "]");
+                    e.printStackTrace();
+                }
+                finally {
+                    trainingRunning.release();
+                    readModelRepPermitted.release();
+                    logger.debug("Semaphores released - permits available: train["
+                            + trainingRunning.availablePermits() + "] readRepPermitted: ["
+                            + readModelRepPermitted.availablePermits() + "]");
+                }
             }
-            catch (Exception e) {
-                logger.error("Model training error occurred [" + e.getMessage() + "]");
-                System.err.println(e);
-            }
-            finally {
-                trainingRunning.release();
-                logger.debug("Semaphore released, remaining number of ["
-                        + trainingRunning.availablePermits() + "] permits available");
-            }
-        };
-        Thread asynch = new Thread(runnable);
-        asynch.start();
-        logger.error("Model training started asynchronously");
+
+        });
+        t.start();
+        logger.info("Model training started asynchronously");
     }
 
     @RequestMapping(value = "/predict", method = RequestMethod.POST)
     public ResponseEntity<String> executePrediction(
             @RequestBody PredictionRequest predictionRequest)
     {
+        if (!readModelRepPermitted.tryAcquire()) {
+            logger.debug("Model repository is being updated; try again later - http-code ["
+                    + HttpStatus.PRECONDITION_FAILED + "]");
+            return new ResponseEntity<>(HttpStatus.PRECONDITION_FAILED);
+        }
+
+        String modelName = predictionRequest.toInceptionRequest().getLayer();
+        if (requestModelIsNotAvailable(modelName)) {
+            logger.debug("Model [" + modelName + "] is not available - http-code ["
+                    + HttpStatus.PRECONDITION_FAILED + "]");
+            releaseModelUpdateSemaphore();
+            return new ResponseEntity<>(HttpStatus.PRECONDITION_FAILED);
+        }
+
         try {
             String response = prediction(predictionRequest.toInceptionRequest());
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e) {
-            logger.error("Error while training", e);
+            logger.error(
+                    "Error while training - http-code [" + HttpStatus.INTERNAL_SERVER_ERROR + "]",
+                    e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private boolean requestModelIsNotAvailable(String repKey)
+    {
+        try {
+            return repository.getModel(repKey) == null;
+        }
+        catch (NullPointerException ne) {
+            return true;
+        }
+
     }
 
     private String prediction(InceptionRequest inceptionReq) throws Exception
     {
         InceptionRecommenderModel model = repository.getModel(inceptionReq.getLayer());
         predictor.predict(inceptionReq, model.getFileSystemLocation());
+
+        releaseModelUpdateSemaphore();
         return predictor.getResultsAsJson();
+    }
+    
+    public synchronized void releaseModelUpdateSemaphore() {
+        logger.debug(
+                "Releasing repoistory access and sending notification to potentially waiting thread");
+        readModelRepPermitted.release();
+        notify();
     }
 
     @ExceptionHandler
@@ -128,5 +184,5 @@ public class RequestController
     {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
-    
+
 }

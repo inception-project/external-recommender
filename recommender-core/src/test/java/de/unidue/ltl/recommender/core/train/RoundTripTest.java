@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.LogFactory;
 import org.dkpro.tc.core.Constants;
 import org.junit.After;
 import org.junit.Before;
@@ -54,11 +55,13 @@ public class RoundTripTest
     public void setup() throws Exception
     {
         File root = FileUtils.getTempDirectory();
-        resultFolder = new File(root, "resultOut/");
-        resultFolder.mkdir();
-        modelLocation = new File(root, "modelOut/");
-        modelLocation.mkdir();
-
+        resultFolder = new File(root, "resultOut" + System.currentTimeMillis() + "/");
+        boolean resultFoldDir = resultFolder.mkdirs();
+        modelLocation = new File(root, "modelOut" + System.currentTimeMillis() + "/");
+        boolean modelDirs = modelLocation.mkdirs();
+        
+        System.err.println("Creation of result folder [" + resultFoldDir + "] + of model folder + ["
+                + modelDirs + "]");
     }
 
     @After
@@ -129,8 +132,19 @@ public class RoundTripTest
         // Train Model
         TrainNewModel m = new TrainNewModel();
         m.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
-        assertTrue(modelLocation.exists());
         File theModel = new File(modelLocation, Constants.MODEL_CLASSIFIER);
+        
+        for(File f : theModel.getParentFile().listFiles()) {
+            System.err.println(f.getAbsolutePath());
+        }
+        
+        LogFactory.getLog(getClass())
+                .debug("Expecting model to be at [" + theModel + "] - file exists ["
+                        + theModel.exists() + "], parent folder exists ["
+                        + theModel.getParentFile().exists() + "]");
+        System.err.println("Expecting model to be at [" + theModel + "] - file exists ["
+                        + theModel.exists() + "], parent folder exists ["
+                        + theModel.getParentFile().exists() + "]");
         assertTrue(theModel.exists());
     }
 
