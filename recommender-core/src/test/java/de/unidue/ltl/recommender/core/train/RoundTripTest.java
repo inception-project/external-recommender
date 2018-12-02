@@ -136,6 +136,9 @@ public class RoundTripTest
                 .debug("Expecting model to be at [" + theModel + "] - file exists ["
                         + theModel.exists() + "], parent folder exists ["
                         + theModel.getParentFile().exists() + "]");
+        System.err.println("Expecting model to be at [" + theModel + "] - file exists ["
+                        + theModel.exists() + "], parent folder exists ["
+                        + theModel.getParentFile().exists() + "]");
         assertTrue(theModel.exists());
     }
 
