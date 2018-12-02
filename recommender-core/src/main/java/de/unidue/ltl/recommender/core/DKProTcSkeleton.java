@@ -24,9 +24,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.pear.util.FileUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
+import de.unidue.ltl.recommender.core.train.TrainNewModel;
 import de.unidue.ltl.recommender.core.util.CoreUtil;
 
 public abstract class DKProTcSkeleton {
@@ -34,6 +37,8 @@ public abstract class DKProTcSkeleton {
     protected File binCasInputFolder;
     protected File dkproHomeFallback;
 
+    protected Logger logger = LoggerFactory.getLogger(TrainNewModel.class);
+    
     public abstract void run(String[]  cas, String typesystem, String annotationName,
                              String annotationFieldName, File targetFolder) throws Exception;
 
@@ -52,6 +57,7 @@ public abstract class DKProTcSkeleton {
             dkproHomeFallback = Files.createTempDir();
             System.setProperty("DKPRO_HOME", dkproHomeFallback.getAbsolutePath());
             dkproHomeFallback.deleteOnExit();
+            logger.debug("Set DKPRO_HOME to [" + dkproHomeFallback.getAbsolutePath() + "]");
         }
     }
 
@@ -72,11 +78,12 @@ public abstract class DKProTcSkeleton {
             JCas jCas = CoreUtil.deserialize(cas, typeSystemXML);
             CoreUtil.writeCasBinary(jCas, binCasInputFolder);
         }
-
         return typeSystemDesc;
     }
 
     protected void cleanUp() throws IOException {
+        logger.debug("Deleting quitely [" + typeSystemXML.getAbsolutePath() + "] ["
+                + binCasInputFolder.getAbsolutePath() + "]");
         FileUtils.deleteQuietly(typeSystemXML);
         FileUtils.deleteDirectory(binCasInputFolder);
     }

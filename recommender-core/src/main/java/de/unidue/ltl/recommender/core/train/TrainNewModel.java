@@ -52,9 +52,11 @@ public class TrainNewModel
         dkproHome();
 
         TypeSystemDescription typeSystem = prepare(cas, typesystem);
+        logger.debug("Created typesystem");
 
         startTraining(binCasInputFolder, typeSystem, targetFolder, annotationName,
                 annotationFieldName);
+        logger.debug("Training finished");
 
         cleanUp();
     }
