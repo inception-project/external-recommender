@@ -79,9 +79,6 @@ public abstract class DKProTcSkeleton {
     protected void cleanUp() throws IOException {
         FileUtils.deleteQuietly(typeSystemXML);
         FileUtils.deleteDirectory(binCasInputFolder);
-        if (dkproHomeFallback != null) {
-            FileUtils.deleteDirectory(dkproHomeFallback);
-        }
     }
 
     protected void writeTypeSystemToFile(String typeSystem) throws IOException {
