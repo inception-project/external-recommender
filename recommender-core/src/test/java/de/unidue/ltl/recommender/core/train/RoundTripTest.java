@@ -55,11 +55,13 @@ public class RoundTripTest
     public void setup() throws Exception
     {
         File root = FileUtils.getTempDirectory();
-        resultFolder = new File(root, "resultOut/");
-        resultFolder.mkdir();
-        modelLocation = new File(root, "modelOut/");
-        modelLocation.mkdir();
-
+        resultFolder = new File(root, "resultOut" + System.currentTimeMillis() + "/");
+        boolean resultFoldDir = resultFolder.mkdirs();
+        modelLocation = new File(root, "modelOut" + System.currentTimeMillis() + "/");
+        boolean modelDirs = modelLocation.mkdirs();
+        
+        System.err.println("Creation of result folder [" + resultFoldDir + "] + of model folder + ["
+                + modelDirs + "]");
     }
 
     @After
