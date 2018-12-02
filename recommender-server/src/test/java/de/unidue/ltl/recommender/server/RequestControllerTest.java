@@ -105,5 +105,4 @@ public class RequestControllerTest
     {
         return controllerToTest.trainingRunning.availablePermits() == 0;
     }
-
 }
