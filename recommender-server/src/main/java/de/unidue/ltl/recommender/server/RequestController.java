@@ -152,6 +152,7 @@ public class RequestController
             }
 
             try {
+                logger.debug("Preconditions met, start predicting");
                 String response = prediction(predictionRequest.toInceptionRequest());
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }
