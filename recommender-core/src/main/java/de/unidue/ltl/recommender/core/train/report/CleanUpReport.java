@@ -29,12 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // tracks created folders in order to delete them after the run
-public class ContextMemoryReport
+public class CleanUpReport
     extends TcAbstractReport
 {
     
     private static final Logger logger = LoggerFactory
-            .getLogger(ContextMemoryReport.class.getName());
+            .getLogger(CleanUpReport.class.getName());
     
     @Override
     public void execute() throws Exception
