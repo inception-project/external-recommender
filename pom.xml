@@ -1,118 +1,110 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>de.unidue.ltl</groupId>
-	<artifactId>inception-recommender</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-	<organization>
-		<name>${organisation.name}</name>
-		<url>https://www.ltl.uni-due.de</url>
-	</organization>
-	<scm>
-		<connection>scm:git:git://github.com/inception-project/external-recommender</connection>
-		<developerConnection>scm:git:git@github.com:inception-project/external-recommender.git</developerConnection>
-		<url>https://github.com/inception-project/external-recommender</url>
-		<tag>0.0.1-SNAPSHOT</tag>
-	</scm>
-	<issueManagement>
-		<url>https://github.com/inception-project/external-recommender/issues</url>
-		<system>GitHub Issues</system>
-	</issueManagement>
-	<modules>
-		<!-- Please keep in alphabetical order -->
-		<module>recommender-core</module>
-		<module>recommender-model-repository</module>
-		<module>recommender-server</module>
-	</modules>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>1.8</java.version>
-		<spring.boot>1.5.14.RELEASE</spring.boot>
-	</properties>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.7.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.0.1</version>
-				<configuration>
-					<notimestamp>true</notimestamp>
-					<!-- Exclude UIMA types and internal API -->
-					<excludePackageNames>*.type:*.internal.*:*.exception</excludePackageNames>
-					<groups>
-						<group>
-							<title>API definitions</title>
-							<packages>de.unidue.ltl.*</packages>
-						</group>
-					</groups>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-	<profiles>
-		<profile>
-			<id>rat-check</id>
-			<activation>
-				<file>
-					<exists>.activate_rat-check</exists>
-				</file>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.rat</groupId>
-						<artifactId>apache-rat-plugin</artifactId>
-						<version>0.12</version>
-						<executions>
-							<execution>
-								<id>default</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>check</goal>
-								</goals>
-								<configuration>
-									<excludes>
-										<!-- release generated artifact -->
-										<exclude>release.properties</exclude>
-										<!-- informational files -->
-										<exclude>CHANGES.txt</exclude>
-										<exclude>NOTICE.txt</exclude>
-										<exclude>README.txt</exclude>
-										<exclude>README.md</exclude>
-										<exclude>logfile.txt</exclude>
-										<!-- build artifacts -->
-										<exclude>.activate_rat-check</exclude>
-										<exclude>target.db</exclude>
-										<!-- resources which may not be able to carry headers -->
-										<exclude>src/main/resources/**/*</exclude>
-										<exclude>src/test/resources/**/*</exclude>
-										<exclude>modelRoot/**</exclude>
-									</excludes>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.unidue.ltl</groupId>
+  <artifactId>inception-recommender</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <parent>
+    <groupId>org.dkpro</groupId>
+    <artifactId>dkpro-parent-pom</artifactId>
+    <version>20</version>
+  </parent>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <organization>
+    <name>Language Technology Lab</name>
+    <url>https://www.ltl.uni-due.de</url>
+  </organization>
+  <scm>
+    <connection>scm:git:git://github.com/inception-project/external-recommender</connection>
+    <developerConnection>scm:git:git@github.com:inception-project/external-recommender.git</developerConnection>
+    <url>https://github.com/inception-project/external-recommender</url>
+    <tag>0.0.1-SNAPSHOT</tag>
+  </scm>
+  <issueManagement>
+    <url>https://github.com/inception-project/external-recommender/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+  <modules>
+    <!-- Please keep in alphabetical order -->
+    <module>recommender-core</module>
+    <module>recommender-model-repository</module>
+    <module>recommender-server</module>
+  </modules>
+  <properties>
+    <spring.boot>1.5.14.RELEASE</spring.boot>
+  </properties>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <notimestamp>true</notimestamp>
+          <!-- Exclude UIMA types and internal API -->
+          <excludePackageNames>*.type:*.internal.*:*.exception</excludePackageNames>
+          <groups>
+            <group>
+              <title>API definitions</title>
+              <packages>de.unidue.ltl.*</packages>
+            </group>
+          </groups>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>rat-check</id>
+      <activation>
+        <file>
+          <exists>.activate_rat-check</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <version>0.13</version>
+            <executions>
+              <execution>
+                <id>default</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <excludes>
+                    <!-- release generated artifact -->
+                    <exclude>release.properties</exclude>
+                    <!-- informational files -->
+                    <exclude>CHANGES.txt</exclude>
+                    <exclude>NOTICE.txt</exclude>
+                    <exclude>README.txt</exclude>
+                    <exclude>README.md</exclude>
+                    <exclude>logfile.txt</exclude>
+                    <!-- build artifacts -->
+                    <exclude>.activate_rat-check</exclude>
+                    <exclude>target.db</exclude>
+                    <!-- resources which may not be able to carry headers -->
+                    <exclude>src/main/resources/**/*</exclude>
+                    <exclude>src/test/resources/**/*</exclude>
+                    <exclude>modelRoot/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
