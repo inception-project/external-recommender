@@ -37,7 +37,7 @@ import org.dkpro.tc.ml.experiment.builder.ExperimentType;
 
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.BinaryCasReader;
 import de.unidue.ltl.recommender.core.DKProTcSkeleton;
-import de.unidue.ltl.recommender.core.train.report.ContextMemoryReport;
+import de.unidue.ltl.recommender.core.train.report.CleanUpReport;
 
 public class TrainNewModel
         extends DKProTcSkeleton {
@@ -80,7 +80,7 @@ public class TrainNewModel
                 .featureMode(FeatureMode.SEQUENCE)
                 .learningMode(LearningMode.SINGLE_LABEL)
                 .outputFolder(targetFolder.getAbsolutePath())
-                .reports(new ContextMemoryReport())
+                .reports(new CleanUpReport())
                 .machineLearningBackend(
                         new MLBackend(new CrfSuiteAdapter(),
                                 CrfSuiteAdapter.ALGORITHM_ADAPTIVE_REGULARIZATION_OF_WEIGHT_VECTOR))
