@@ -82,6 +82,7 @@
                   <goal>check</goal>
                 </goals>
                 <configuration>
+                  <consoleOutput>true</consoleOutput>
                   <excludes>
                     <!-- release generated artifact -->
                     <exclude>release.properties</exclude>
