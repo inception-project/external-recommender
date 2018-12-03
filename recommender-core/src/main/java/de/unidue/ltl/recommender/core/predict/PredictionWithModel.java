@@ -50,13 +50,13 @@ public class PredictionWithModel
     }
 
     @Override
-    public void run(String []  cas, String typesystem, String annotationName,
+    public void run(String[] cas, String typesystem, String annotationName,
             String annotationFieldName, File model)
         throws Exception
     {
         dkproHome();
 
-        TypeSystemDescription typeSystem = prepare( cas, typesystem);
+        TypeSystemDescription typeSystem = prepare(cas, typesystem);
 
         startPrediction(binCasInputFolder, typeSystem, model, annotationName, annotationFieldName);
 
@@ -67,23 +67,26 @@ public class PredictionWithModel
             File model, String annotationName, String annotationFieldName)
         throws Exception
     {
-        
+
         logger.info("Start prediction pipeline with model [" + model.getAbsolutePath()
                 + "], results will be stored at [" + predictionOutput.getAbsolutePath() + "]");
 
         CollectionReaderDescription reader = CollectionReaderFactory.createReaderDescription(
                 BinaryCasReader.class, BinaryCasReader.PARAM_MERGE_TYPE_SYSTEM, true,
-                BinaryCasReader.PARAM_LANGUAGE, "x-undefined", BinaryCasReader.PARAM_SOURCE_LOCATION,
-                casPredictOutput.getAbsoluteFile(), BinaryCasReader.PARAM_PATTERNS, "*.bin");
+                BinaryCasReader.PARAM_LANGUAGE, "x-undefined",
+                BinaryCasReader.PARAM_SOURCE_LOCATION, casPredictOutput.getAbsoluteFile(),
+                BinaryCasReader.PARAM_PATTERNS, "*.bin");
 
         AnalysisEngineDescription tcAnnotation = AnalysisEngineFactory
                 .createEngineDescription(TargetSetterAnnotator.class);
 
         AnalysisEngineDescription annotator = AnalysisEngineFactory.createEngineDescription(
-                PreTrainedModelProviderSequenceMode.class, PreTrainedModelProviderSequenceMode.PARAM_NAME_SEQUENCE_ANNOTATION,
-                Sentence.class.getName(), PreTrainedModelProviderSequenceMode.PARAM_NAME_TARGET_ANNOTATION,
-                Token.class.getName(), PreTrainedModelProviderSequenceMode.PARAM_TC_MODEL_LOCATION, model,
-                PreTrainedModelProviderSequenceMode.PARAM_RETAIN_TARGETS, false);
+                PreTrainedModelProviderSequenceMode.class,
+                PreTrainedModelProviderSequenceMode.PARAM_NAME_SEQUENCE_ANNOTATION,
+                Sentence.class.getName(),
+                PreTrainedModelProviderSequenceMode.PARAM_NAME_TARGET_ANNOTATION,
+                Token.class.getName(), PreTrainedModelProviderSequenceMode.PARAM_TC_MODEL_LOCATION,
+                model, PreTrainedModelProviderSequenceMode.PARAM_RETAIN_TARGETS, false);
 
         AnalysisEngineDescription resultWriter = AnalysisEngineFactory.createEngineDescription(
                 ResultWriterAnnotator.class, ResultWriterAnnotator.PARAM_ANNOTATION_TARGET_NAME,

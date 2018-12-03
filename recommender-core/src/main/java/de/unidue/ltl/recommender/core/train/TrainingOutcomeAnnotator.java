@@ -33,6 +33,8 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.tc.api.type.TextClassificationOutcome;
 import org.dkpro.tc.api.type.TextClassificationSequence;
 import org.dkpro.tc.api.type.TextClassificationTarget;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.featurepath.FeaturePathUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -53,8 +55,10 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 	private String fieldName;
 
 	int tcId = 0;
+	
+	protected Logger logger = LoggerFactory.getLogger(TrainingOutcomeAnnotator.class);
 
-	public static final String OTHER_OUTCOME = "dkpro-tc-negativeClassForNotAnnotatedTokens";
+	public static final String OTHER_OUTCOME = "dkpro-tc-placeholder";
 
 	Type annotationType = null;
 	Feature feature = null;
@@ -69,19 +73,28 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 		List<AnnotationFS> classificationTargets = new ArrayList<AnnotationFS>(
 				CasUtil.select(aJCas.getCas(), annotationType));
 
+        logger.debug("Found [" + classificationTargets.size() + "] training labels of type ["
+                + annotationType.getName() + "]");
+		
 		// Annotate the targets
 		for (AnnotationFS a : classificationTargets) {
 
 			List<Token> tokensCovered = JCasUtil.selectCovered(aJCas, Token.class, a);
-
+			
 			// if two or more tokens are covered each is annotated separately
+			String ov = a.getFeatureValueAsString(feature);
+			if(ov == null) {
+                logger.debug("The feature value [" + feature.getName() + "] of text ["
+                        + a.getCoveredText() + "] is null - excluding information from training");
+			    continue;
+			}
 			for (Token t : tokensCovered) {
 				TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(), t.getEnd());
 				aTarget.setId(tcId++);
 				aTarget.addToIndexes();
 
 				TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
-				outcome.setOutcome(a.getFeatureValueAsString(feature));
+				outcome.setOutcome(ov);
 				outcome.addToIndexes();
 			}
 		}

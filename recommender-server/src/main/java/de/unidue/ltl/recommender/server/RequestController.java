@@ -80,6 +80,13 @@ public class RequestController
             logger.error("Error while training [" + HttpStatus.INTERNAL_SERVER_ERROR + "]", e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        finally {
+            trainingRunning.release();
+            logger.debug("Training finished - semaphore status trainingRunning ["
+                    + (trainingRunning.availablePermits() > 0 ? "no" : "yes")
+                    + "] readingRepositoryPermitted: ["
+                    + (readModelRepPermitted.availablePermits() > 0 ? "yes" : "no") + "]");
+        }
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -93,8 +100,7 @@ public class RequestController
             public synchronized void run()
             {
                 try {
-                    InceptionRecommenderModel trainedModel = null;
-                    trainedModel = trainer.train(inceptionReq);
+                    InceptionRecommenderModel trainedModel = trainer.train(inceptionReq);
                     while (!readModelRepPermitted.tryAcquire()) {
                         logger.debug(
                                 "Model repository is being read - check-in of new model pending");
@@ -108,11 +114,7 @@ public class RequestController
                     e.printStackTrace();
                 }
                 finally {
-                    trainingRunning.release();
                     readModelRepPermitted.release();
-                    logger.debug("Semaphores released - permits available: train["
-                            + trainingRunning.availablePermits() + "] readRepPermitted: ["
-                            + readModelRepPermitted.availablePermits() + "]");
                 }
             }
 
@@ -170,10 +172,11 @@ public class RequestController
         releaseModelUpdateSemaphore();
         return predictor.getResultsAsJson();
     }
-    
-    public synchronized void releaseModelUpdateSemaphore() {
+
+    public synchronized void releaseModelUpdateSemaphore()
+    {
         logger.debug(
-                "Releasing repoistory access and sending notification to potentially waiting thread");
+                "Releasing repository access and sending notification to potentially waiting thread");
         readModelRepPermitted.release();
         notify();
     }

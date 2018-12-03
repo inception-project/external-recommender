@@ -96,7 +96,7 @@ public class TrainNewModel
                                 TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, 0)
                         , create(CharacterNGram.class,
                                 CharacterNGram.PARAM_NGRAM_USE_TOP_K, 2500,
-                                CharacterNGram.PARAM_NGRAM_LOWER_CASE, false,
+                                CharacterNGram.PARAM_NGRAM_LOWER_CASE, true,
                                 CharacterNGram.PARAM_NGRAM_MIN_N, 2,
                                 CharacterNGram.PARAM_NGRAM_MAX_N, 4)
                 )

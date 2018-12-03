@@ -28,37 +28,51 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.tc.api.type.TextClassificationOutcome;
 import org.dkpro.tc.api.type.TextClassificationSequence;
 import org.dkpro.tc.api.type.TextClassificationTarget;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class TargetSetterAnnotator extends JCasAnnotator_ImplBase {
+public class TargetSetterAnnotator
+    extends JCasAnnotator_ImplBase
+{
 
-	int tcId = 0;
+    int tcId = 0;
 
-	/**
-	 * Prepares the JCas for a prediction. Iterates the tokens and sets the
-	 * annotations required by DKPro TC to work.
-	 */
-	@Override
-	public void process(JCas aJCas) throws AnalysisEngineProcessException {
+    private static final Logger logger = LoggerFactory
+            .getLogger(TargetSetterAnnotator.class.getName());
 
-		List<Sentence> sents = new ArrayList<Sentence>(JCasUtil.select(aJCas, Sentence.class));
-		for (Sentence s : sents) {
+    /**
+     * Prepares the JCas for a prediction. Iterates the tokens and sets the annotations required by
+     * DKPro TC to work.
+     */
+    @Override
+    public void process(JCas aJCas) throws AnalysisEngineProcessException
+    {
 
-			TextClassificationSequence seq = new TextClassificationSequence(aJCas, s.getBegin(), s.getEnd());
-			seq.addToIndexes();
+        List<Sentence> sents = new ArrayList<Sentence>(JCasUtil.select(aJCas, Sentence.class));
+        logger.debug("Detected [" + sents.size() + "] sentences");
+        for (int i=0; i < sents.size(); i++) {
+            Sentence s = sents.get(i);
+            TextClassificationSequence seq = new TextClassificationSequence(aJCas, s.getBegin(),
+                    s.getEnd());
+            seq.addToIndexes();
 
-			List<Token> tokens = new ArrayList<Token>(JCasUtil.selectCovered(aJCas, Token.class, s));
-			for (Token t : tokens) {
-				TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(), t.getEnd());
-				aTarget.setId(tcId++);
-				aTarget.addToIndexes();
+            List<Token> tokens = new ArrayList<Token>(
+                    JCasUtil.selectCovered(aJCas, Token.class, s));
+            logger.debug("Detected [" + tokens.size() + "] tokens in sentence [" + (i + 1) + "]");
+            for (Token t : tokens) {
+                TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(),
+                        t.getEnd());
+                aTarget.setId(tcId++);
+                aTarget.addToIndexes();
 
-				TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
-				outcome.setOutcome("UNKNOWN-LABEL");
-				outcome.addToIndexes();
-			}
-		}
-	}
+                TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas,
+                        t.getBegin(), t.getEnd());
+                outcome.setOutcome("UNKNOWN-LABEL");
+                outcome.addToIndexes();
+            }
+        }
+    }
 }
