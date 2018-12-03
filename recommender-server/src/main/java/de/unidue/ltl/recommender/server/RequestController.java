@@ -101,21 +101,25 @@ public class RequestController
             {
                 try {
                     InceptionRecommenderModel trainedModel = trainer.train(inceptionReq);
-                    while (!readModelRepPermitted.tryAcquire()) {
-                        logger.debug(
-                                "Model repository is being read - check-in of new model pending");
-                        wait();
+
+                    try {
+                        while (!readModelRepPermitted.tryAcquire()) {
+                            logger.debug(
+                                    "Model repository is being read - check-in of new model pending");
+                            wait();
+                        }
+                        repository.checkInModel(trainedModel, true);
                     }
-                    repository.checkInModel(trainedModel, true);
+                    finally {
+                        readModelRepPermitted.release();
+                    }
                 }
                 catch (Exception e) {
                     logger.error(
                             "Model training error occurred [" + e.getStackTrace().toString() + "]");
                     e.printStackTrace();
                 }
-                finally {
-                    readModelRepPermitted.release();
-                }
+
             }
 
         });
