@@ -77,6 +77,8 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 
         logger.debug("Found [" + classificationTargets.size() + "] training labels of type ["
                 + annotationType.getName() + "]");
+        classificationTargets.forEach(x -> logger
+                .debug("[" + x.getCoveredText() + "->" + x.getFeatureValueAsString(feature) + "]"));
 		
 		// Annotate the targets
 		for (AnnotationFS a : classificationTargets) {
