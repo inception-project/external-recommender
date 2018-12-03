@@ -19,7 +19,6 @@
 package de.unidue.ltl.recommender.server;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import javax.servlet.http.HttpServletResponse;
@@ -68,7 +67,6 @@ public class RequestController
     @RequestMapping(value = "/train", method = RequestMethod.POST)
     public ResponseEntity<String> executeTraining(@RequestBody TrainingRequest trainingRequest)
     {
-        
         if (!trainingRunning.tryAcquire()) {
             logger.info("Received training request but trainer is currently busy ["
                     + HttpStatus.TOO_MANY_REQUESTS + "]");
@@ -81,6 +79,13 @@ public class RequestController
         catch (Exception e) {
             logger.error("Error while training [" + HttpStatus.INTERNAL_SERVER_ERROR + "]", e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        finally {
+            trainingRunning.release();
+            logger.debug("Training finished - semaphore status trainingRunning ["
+                    + (trainingRunning.availablePermits() > 0 ? "no" : "yes")
+                    + "] readingRepositoryPermitted: ["
+                    + (readModelRepPermitted.availablePermits() > 0 ? "yes" : "no") + "]");
         }
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -95,10 +100,8 @@ public class RequestController
             public synchronized void run()
             {
                 try {
-                    InceptionRecommenderModel trainedModel = null;
-                    trainedModel = trainer.train(inceptionReq);
-                    
-                    // Only one model can be written to disc at a time during this time no reads are permitted
+                    InceptionRecommenderModel trainedModel = trainer.train(inceptionReq);
+
                     try {
                         while (!readModelRepPermitted.tryAcquire()) {
                             logger.debug(
@@ -112,68 +115,49 @@ public class RequestController
                     }
                 }
                 catch (Exception e) {
-                    StringBuilder sb = new StringBuilder();
-                    Arrays.stream(e.getStackTrace()).forEach(x->sb.append(x.toString()+"\n"));
                     logger.error(
-                            "Model training error occurred [" + sb.toString() + "]");
+                            "Model training error occurred [" + e.getStackTrace().toString() + "]");
                     e.printStackTrace();
                 }
-                finally {
-                    trainingRunning.release();
-                    logger.debug("Semaphores released - permits available: train["
-                            + trainingRunning.availablePermits() + "] readRepPermitted: ["
-                            + readModelRepPermitted.availablePermits() + "]");
-                }
+
             }
 
         });
         t.start();
         logger.info("Model training started asynchronously");
     }
-    
+
     @RequestMapping(value = "/predict", method = RequestMethod.POST)
     public ResponseEntity<String> executePrediction(
             @RequestBody PredictionRequest predictionRequest)
     {
-        logger.info("Receivied prediction request for layer ["+predictionRequest.toInceptionRequest().getLayer()+"]");
-        
         if (!readModelRepPermitted.tryAcquire()) {
             logger.debug("Model repository is being updated; try again later - http-code ["
                     + HttpStatus.PRECONDITION_FAILED + "]");
             return new ResponseEntity<>(HttpStatus.PRECONDITION_FAILED);
         }
 
+        String modelName = predictionRequest.toInceptionRequest().getLayer();
+        if (requestModelIsNotAvailable(modelName)) {
+            logger.debug("Model [" + modelName + "] is not available - http-code ["
+                    + HttpStatus.PRECONDITION_FAILED + "]");
+            releaseModelUpdateSemaphore();
+            return new ResponseEntity<>(HttpStatus.PRECONDITION_FAILED);
+        }
+
         try {
-            String modelName = predictionRequest.toInceptionRequest().getLayer();
-            if (requestedModelIsNotAvailable(modelName)) {
-                logger.debug("Model [" + modelName + "] is not available - http-code ["
-                        + HttpStatus.PRECONDITION_FAILED + "]");
-                return new ResponseEntity<>(HttpStatus.PRECONDITION_FAILED);
-            }
-
-            try {
-                logger.debug("Preconditions met, start predicting");
-                String response = prediction(predictionRequest.toInceptionRequest());
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            }
-            catch (Exception e) {
-                logger.error("Error while training - http-code [" + HttpStatus.INTERNAL_SERVER_ERROR
-                        + "]", e);
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            String response = prediction(predictionRequest.toInceptionRequest());
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
-        finally {
-            notifyReleaseRepositoryLock();
+        catch (Exception e) {
+            logger.error(
+                    "Error while training - http-code [" + HttpStatus.INTERNAL_SERVER_ERROR + "]",
+                    e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private synchronized void notifyReleaseRepositoryLock()
-    {
-        readModelRepPermitted.release();
-        notify();        
-    }
-
-    private boolean requestedModelIsNotAvailable(String repKey)
+    private boolean requestModelIsNotAvailable(String repKey)
     {
         try {
             return repository.getModel(repKey) == null;
@@ -188,9 +172,19 @@ public class RequestController
     {
         InceptionRecommenderModel model = repository.getModel(inceptionReq.getLayer());
         predictor.predict(inceptionReq, model.getFileSystemLocation());
+
+        releaseModelUpdateSemaphore();
         return predictor.getResultsAsJson();
     }
-    
+
+    public synchronized void releaseModelUpdateSemaphore()
+    {
+        logger.debug(
+                "Releasing repository access and sending notification to potentially waiting thread");
+        readModelRepPermitted.release();
+        notify();
+    }
+
     @ExceptionHandler
     void handleIllegalArgumentException(IllegalArgumentException e, HttpServletResponse response)
         throws IOException

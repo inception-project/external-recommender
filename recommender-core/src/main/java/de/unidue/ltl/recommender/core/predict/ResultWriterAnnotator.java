@@ -35,6 +35,8 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.tc.api.type.TextClassificationOutcome;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.featurepath.FeaturePathUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -65,6 +67,9 @@ public class ResultWriterAnnotator
     @ConfigurationParameter(name = PARAM_DEBUG_SYS_OUT, mandatory = false, defaultValue = "false")
     private boolean debug;
 
+    private static final Logger logger = LoggerFactory
+            .getLogger(ResultWriterAnnotator.class.getName());
+
     @Override
     public void initialize(final UimaContext context) throws ResourceInitializationException
     {
@@ -77,15 +82,17 @@ public class ResultWriterAnnotator
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         List<Sentence> sentences = new ArrayList<Sentence>(JCasUtil.select(aJCas, Sentence.class));
-
+        logger.debug("Found [" + sentences.size() + "] sentences in CAS");
         for (Sentence s : sentences) {
             List<TextClassificationOutcome> outcomes = JCasUtil.selectCovered(aJCas,
                     TextClassificationOutcome.class, s);
-
+            logger.debug("Found [" + outcomes.size() + "] "
+                    + TextClassificationOutcome.class.getSimpleName() + " in sentence");
             for (int j = 0; j < outcomes.size(); j++) {
 
                 if (outcomes.get(j).getOutcome().equals(TrainingOutcomeAnnotator.OTHER_OUTCOME)) {
-                    // is class "no class"
+                    logger.debug("Prediction for [" + outcomes.get(j).getCoveredText()
+                            + "] suppressed - is internal placeholder");
                     continue;
                 }
 
@@ -98,7 +105,6 @@ public class ResultWriterAnnotator
                     adjacentLen = collectNumberOfMergeCandidates(outcomes, j);
                     end = outcomes.get(j + adjacentLen).getEnd();
                 }
-                
                 annotateTargetAnnotation(aJCas, begin, end, outcomes, j);
 
                 j += adjacentLen;
@@ -115,19 +121,21 @@ public class ResultWriterAnnotator
         }
     }
 
-    private void annotateTargetAnnotation(JCas aJCas, int begin, int end,  final List<TextClassificationOutcome> outcomes, final int currIdx)
+    private void annotateTargetAnnotation(JCas aJCas, int begin, int end,
+            final List<TextClassificationOutcome> outcomes, final int currIdx)
     {
         String value = outcomes.get(currIdx).getOutcome();
-        
+
         Type annotationType = CasUtil.getAnnotationType(aJCas.getCas(), annotation);
-        AnnotationFS targetAnno = aJCas.getCas().createAnnotation(annotationType, begin,
-                end);
-        Feature featureByBaseName = FeaturePathUtils
-                .getType(aJCas.getTypeSystem(), annotation).getFeatureByBaseName(annoValue);
+        AnnotationFS targetAnno = aJCas.getCas().createAnnotation(annotationType, begin, end);
+        Feature featureByBaseName = FeaturePathUtils.getType(aJCas.getTypeSystem(), annotation)
+                .getFeatureByBaseName(annoValue);
         targetAnno.setFeatureValueFromString(featureByBaseName, value);
         ((Annotation) targetAnno).addToIndexes();
-
-        outcomes.get(currIdx).removeFromIndexes();        
+        logger.debug("Value [" + value + "] for text [" + targetAnno.getCoveredText()
+                + "] stored in [" + targetAnno.getClass().getSimpleName() + "/"
+                + featureByBaseName.getName() + "]");
+        outcomes.get(currIdx).removeFromIndexes();
     }
 
     private int collectNumberOfMergeCandidates(List<TextClassificationOutcome> outcomes,

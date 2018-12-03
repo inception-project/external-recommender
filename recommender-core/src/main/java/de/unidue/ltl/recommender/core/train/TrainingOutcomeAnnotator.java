@@ -33,6 +33,8 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.tc.api.type.TextClassificationOutcome;
 import org.dkpro.tc.api.type.TextClassificationSequence;
 import org.dkpro.tc.api.type.TextClassificationTarget;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.featurepath.FeaturePathUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -53,11 +55,15 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 	private String fieldName;
 
 	int tcId = 0;
+	
+	protected Logger logger = LoggerFactory.getLogger(TrainingOutcomeAnnotator.class);
 
-	public static final String OTHER_OUTCOME = "dkpro-tc-negativeClassForNotAnnotatedTokens";
+	public static final String OTHER_OUTCOME = "dkpro-tc-placeholder";
 
 	Type annotationType = null;
 	Feature feature = null;
+	
+	boolean atLeastOneAnnotated=false;
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
@@ -69,20 +75,32 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 		List<AnnotationFS> classificationTargets = new ArrayList<AnnotationFS>(
 				CasUtil.select(aJCas.getCas(), annotationType));
 
+        logger.debug("Found [" + classificationTargets.size() + "] training labels of type ["
+                + annotationType.getName() + "]");
+        classificationTargets.forEach(x -> logger
+                .debug("[" + x.getCoveredText() + "->" + x.getFeatureValueAsString(feature) + "]"));
+		
 		// Annotate the targets
 		for (AnnotationFS a : classificationTargets) {
 
 			List<Token> tokensCovered = JCasUtil.selectCovered(aJCas, Token.class, a);
-
+			
 			// if two or more tokens are covered each is annotated separately
+			String ov = a.getFeatureValueAsString(feature);
+			if(ov == null) {
+                logger.debug("The feature value [" + feature.getName() + "] of text ["
+                        + a.getCoveredText() + "] is null - excluding information from training");
+			    continue;
+			}
 			for (Token t : tokensCovered) {
 				TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(), t.getEnd());
 				aTarget.setId(tcId++);
 				aTarget.addToIndexes();
 
 				TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
-				outcome.setOutcome(a.getFeatureValueAsString(feature));
+				outcome.setOutcome(ov);
 				outcome.addToIndexes();
+				atLeastOneAnnotated = true;
 			}
 		}
 
@@ -90,41 +108,51 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 			TextClassificationSequence classSeq = new TextClassificationSequence(aJCas, s.getBegin(), s.getEnd());
 			classSeq.addToIndexes();
 		}
+		
+		if (!atLeastOneAnnotated && tokens.size() > 0) {
+		    logger.debug("No annotations found - annotating the first token to ensure something is annotated");
+		    annotatedDummy(aJCas, tokens.get(0));
+		}
 
-		annotateTokensWithoutCoveringTargetAsOther(aJCas, tokens, annotationType);
+        // This leads to an extremely skewed distribution of data, i.e. 99% will be the dummy values;
+        // better work only with what have been annotated so far
+//		annotateTokensWithoutCoveringTargetAsOther(aJCas, tokens, annotationType);
 	}
 
-	private void loadTypeInformation(JCas aJCas) {
+	private void annotatedDummy(JCas aJCas, Token t)
+    {
+	    TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(), t.getEnd());
+        aTarget.setId(tcId++);
+        aTarget.addToIndexes();
+
+        TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
+        outcome.setOutcome(OTHER_OUTCOME);
+        outcome.addToIndexes();        
+    }
+
+    private void loadTypeInformation(JCas aJCas) {
 		annotationType = CasUtil.getAnnotationType(aJCas.getCas(), annotationName);
 		feature = FeaturePathUtils.getType(aJCas.getTypeSystem(), annotationName).getFeatureByBaseName(fieldName);
-		//
-		// Collection<AnnotationFS> select = CasUtil.select(jcas.getCas(),
-		// annotationType);
-		// for(AnnotationFS afs : select) {
-		// System.out.println(afs.getFeatureValueAsString(feature) + "| " +
-		// afs.getBegin() + "/"
-		// + afs.getEnd());
-		// }
 	}
 
-	private void annotateTokensWithoutCoveringTargetAsOther(JCas aJCas, List<Token> tokens, Type annotationType) {
-		for (Token t : tokens) {
-
-			List<TextClassificationTarget> targets = JCasUtil.selectCovered(aJCas, TextClassificationTarget.class, t);
-			if (!targets.isEmpty()) {
-				// some target is there i.e. has been annotated with a target - skip
-				continue;
-			}
-
-			TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(), t.getEnd());
-			aTarget.setId(tcId++);
-			aTarget.addToIndexes();
-
-			TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
-			outcome.setOutcome(OTHER_OUTCOME);
-			outcome.addToIndexes();
-
-		}
-	}
+//	private void annotateTokensWithoutCoveringTargetAsOther(JCas aJCas, List<Token> tokens, Type annotationType) {
+//		for (Token t : tokens) {
+//
+//			List<TextClassificationTarget> targets = JCasUtil.selectCovered(aJCas, TextClassificationTarget.class, t);
+//			if (!targets.isEmpty()) {
+//				// some target is there i.e. has been annotated with a target - skip
+//				continue;
+//			}
+//
+//			TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(), t.getEnd());
+//			aTarget.setId(tcId++);
+//			aTarget.addToIndexes();
+//
+//			TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
+//			outcome.setOutcome(OTHER_OUTCOME);
+//			outcome.addToIndexes();
+//
+//		}
+//	}
 
 }
