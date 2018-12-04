@@ -80,13 +80,6 @@ public class RequestController
             logger.error("Error while training [" + HttpStatus.INTERNAL_SERVER_ERROR + "]", e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        finally {
-            trainingRunning.release();
-            logger.debug("Training finished - semaphore status trainingRunning ["
-                    + (trainingRunning.availablePermits() > 0 ? "no" : "yes")
-                    + "] readingRepositoryPermitted: ["
-                    + (readModelRepPermitted.availablePermits() > 0 ? "yes" : "no") + "]");
-        }
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -100,9 +93,9 @@ public class RequestController
             public synchronized void run()
             {
                 try {
+                    try {
                     InceptionRecommenderModel trainedModel = trainer.train(inceptionReq);
 
-                    try {
                         while (!readModelRepPermitted.tryAcquire()) {
                             logger.debug(
                                     "Model repository is being read - check-in of new model pending");
@@ -112,6 +105,11 @@ public class RequestController
                     }
                     finally {
                         readModelRepPermitted.release();
+                        trainingRunning.release();
+                        logger.debug("Training finished - semaphore status trainingRunning ["
+                                + (trainingRunning.availablePermits() > 0 ? "no" : "yes")
+                                + "] readingRepositoryPermitted: ["
+                                + (readModelRepPermitted.availablePermits() > 0 ? "yes" : "no") + "]");
                     }
                 }
                 catch (Exception e) {

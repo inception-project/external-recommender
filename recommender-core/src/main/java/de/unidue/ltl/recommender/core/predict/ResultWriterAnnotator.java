@@ -133,8 +133,7 @@ public class ResultWriterAnnotator
         targetAnno.setFeatureValueFromString(featureByBaseName, value);
         ((Annotation) targetAnno).addToIndexes();
         logger.debug("Value [" + value + "] for text [" + targetAnno.getCoveredText()
-                + "] stored in [" + targetAnno.getClass().getSimpleName() + "/"
-                + featureByBaseName.getName() + "]");
+                + "] stored in [" + featureByBaseName.getName() + "]");
         outcomes.get(currIdx).removeFromIndexes();
     }
 
