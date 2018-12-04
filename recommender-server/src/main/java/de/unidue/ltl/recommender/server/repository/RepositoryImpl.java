@@ -49,7 +49,7 @@ public class RepositoryImpl
     private void init()
     {
         if (rep == null) {
-            logger.info("Initializing with root directory located at [" + repositoryRoot + "]");
+            logger.info("Initializing model repository at [" + repositoryRoot + "]");
             rep = new ModelRepository(repositoryRoot);
             rep.screenFolderAndLoad();
         }
@@ -75,6 +75,8 @@ public class RepositoryImpl
             boolean deleteSourceLocation)
         throws Exception
     {
+        logger.info("Checking in model with id ["+id+"]");
+        
         init();
 
         if (exists(id)) {

@@ -45,6 +45,8 @@ public abstract class DKProTcSkeleton {
     public DKProTcSkeleton() throws Exception {
         typeSystemXML = FileUtil.createTempFile("typeSystemTmp", ".txt");
         binCasInputFolder = Files.createTempDir();
+        typeSystemXML.deleteOnExit();
+        binCasInputFolder.deleteOnExit();
     }
 
     /**
