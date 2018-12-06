@@ -39,8 +39,25 @@ public abstract class DKProTcSkeleton {
 
     protected Logger logger = LoggerFactory.getLogger(TrainNewModel.class);
     
+    /**
+     * Runs the TC backend
+     * @param cas
+     *          the input cas objects
+     * @param typesystem
+     *          the typesystem
+     * @param annotationName
+     *          the name of the annotation which is the target
+     * @param annotationFieldName
+     *          the field of the annotation in which the value is stored
+     * @param targetFolder
+     *          output folder
+     * @param anchoringMode
+     *          the mode if the processing works on token, spans, etc.
+     * @throws Exception
+     *          in case of an error
+     */
     public abstract void run(String[]  cas, String typesystem, String annotationName,
-                             String annotationFieldName, File targetFolder) throws Exception;
+                             String annotationFieldName, File targetFolder, String anchoringMode) throws Exception;
 
     public DKProTcSkeleton() throws Exception {
         typeSystemXML = FileUtil.createTempFile("typeSystemTmp", ".txt");

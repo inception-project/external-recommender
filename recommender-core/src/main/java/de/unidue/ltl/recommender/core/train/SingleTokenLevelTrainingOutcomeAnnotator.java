@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * training a model. The reference information (i.e. the labels) are extracted
  * from the externally provided type/field information.
  */
-public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
+public class SingleTokenLevelTrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 	public static final String PARAM_ANNOTATION_TARGET_NAME = "inputAnnotation";
 	@ConfigurationParameter(name = PARAM_ANNOTATION_TARGET_NAME, mandatory = true)
 	private String annotationName;
@@ -56,22 +56,20 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 
 	int tcId = 0;
 	
-	protected Logger logger = LoggerFactory.getLogger(TrainingOutcomeAnnotator.class);
+	protected Logger logger = LoggerFactory.getLogger(SingleTokenLevelTrainingOutcomeAnnotator.class);
 
 	public static final String OTHER_OUTCOME = "dkpro-tc-placeholder";
 
 	Type annotationType = null;
 	Feature feature = null;
 	
-	boolean atLeastOneAnnotated=false;
-
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
 		if (annotationType == null) {
 			loadTypeInformation(aJCas);
 		}
 
-		List<Token> tokens = new ArrayList<Token>(JCasUtil.select(aJCas, Token.class));
+//		List<Token> tokens = new ArrayList<Token>(JCasUtil.select(aJCas, Token.class));
 		List<AnnotationFS> classificationTargets = new ArrayList<AnnotationFS>(
 				CasUtil.select(aJCas.getCas(), annotationType));
 
@@ -100,7 +98,6 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 				TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
 				outcome.setOutcome(ov);
 				outcome.addToIndexes();
-				atLeastOneAnnotated = true;
 			}
 		}
 
@@ -109,26 +106,10 @@ public class TrainingOutcomeAnnotator extends JCasAnnotator_ImplBase {
 			classSeq.addToIndexes();
 		}
 		
-		if (!atLeastOneAnnotated && tokens.size() > 0) {
-		    logger.debug("No annotations found - annotating the first token to ensure something is annotated");
-		    annotatedDummy(aJCas, tokens.get(0));
-		}
-
         // This leads to an extremely skewed distribution of data, i.e. 99% will be the dummy values;
         // better work only with what have been annotated so far
 //		annotateTokensWithoutCoveringTargetAsOther(aJCas, tokens, annotationType);
 	}
-
-	private void annotatedDummy(JCas aJCas, Token t)
-    {
-	    TextClassificationTarget aTarget = new TextClassificationTarget(aJCas, t.getBegin(), t.getEnd());
-        aTarget.setId(tcId++);
-        aTarget.addToIndexes();
-
-        TextClassificationOutcome outcome = new TextClassificationOutcome(aJCas, t.getBegin(), t.getEnd());
-        outcome.setOutcome(OTHER_OUTCOME);
-        outcome.addToIndexes();        
-    }
 
     private void loadTypeInformation(JCas aJCas) {
 		annotationType = CasUtil.getAnnotationType(aJCas.getCas(), annotationName);

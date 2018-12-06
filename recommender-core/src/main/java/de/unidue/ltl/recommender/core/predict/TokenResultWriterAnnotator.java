@@ -41,10 +41,10 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.featurepath.FeaturePathUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.unidue.ltl.recommender.core.train.TrainingOutcomeAnnotator;
+import de.unidue.ltl.recommender.core.train.SingleTokenLevelTrainingOutcomeAnnotator;
 import de.unidue.ltl.recommender.core.util.CoreUtil;
 
-public class ResultWriterAnnotator
+public class TokenResultWriterAnnotator
     extends JCasAnnotator_ImplBase
 {
     public static final String PARAM_ANNOTATION_TARGET_NAME = "annotationName";
@@ -68,7 +68,7 @@ public class ResultWriterAnnotator
     private boolean debug;
 
     private static final Logger logger = LoggerFactory
-            .getLogger(ResultWriterAnnotator.class.getName());
+            .getLogger(TokenResultWriterAnnotator.class.getName());
 
     @Override
     public void initialize(final UimaContext context) throws ResourceInitializationException
@@ -90,7 +90,7 @@ public class ResultWriterAnnotator
                     + TextClassificationOutcome.class.getSimpleName() + " in sentence");
             for (int j = 0; j < outcomes.size(); j++) {
 
-                if (outcomes.get(j).getOutcome().equals(TrainingOutcomeAnnotator.OTHER_OUTCOME)) {
+                if (outcomes.get(j).getOutcome().equals(SingleTokenLevelTrainingOutcomeAnnotator.OTHER_OUTCOME)) {
                     logger.debug("Prediction for [" + outcomes.get(j).getCoveredText()
                             + "] suppressed - is internal placeholder");
                     continue;

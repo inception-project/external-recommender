@@ -49,9 +49,9 @@ public class TcInceptionRecommenderPredictor
     }
 
     @Override
-    public void predict(InceptionRequest req, File model) throws Exception
+    public void predict(InceptionRequest req, File model, String mode) throws Exception
     {
-        pwm.run(req.getDocuments(), req.getTypeSystem(), req.getLayer(), req.getFeature(), model);
+        pwm.run(req.getDocuments(), req.getTypeSystem(), req.getLayer(), req.getFeature(), model, mode);
     }
 
     @Override

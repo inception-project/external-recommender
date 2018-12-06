@@ -69,6 +69,7 @@ public class TrainingRequest {
         result.setTypeSystem(typeSystem);
         result.setLayer(getMetadata().getLayer());
         result.setFeature(getMetadata().getFeature());
+        result.setAnchoringMode(getMetadata().getAnchoringMode());
         return result;
     }
 }

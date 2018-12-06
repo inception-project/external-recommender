@@ -44,6 +44,7 @@ public class TcInceptionRecommenderTrainer
         String typeSystem = req.getTypeSystem();
         String layer = req.getLayer();
         String feature = req.getFeature();
+        String anchoringMode = req.getAnchoringMode();
 
         long timestamps = System.currentTimeMillis();
         File modelLocation = new File(FileUtils.getTempDirectory(), layer);
@@ -51,7 +52,7 @@ public class TcInceptionRecommenderTrainer
         logger.info("Will store model temporary at [" + modelLocation.getAbsolutePath() + "]");
 
         TrainNewModel model = new TrainNewModel();
-        model.run(documents, typeSystem, layer, feature, modelLocation);
+        model.run(documents, typeSystem, layer, feature, modelLocation, anchoringMode);
 
         logger.info("Will create model with id [" + layer + "] at location ["
                 + modelLocation.getAbsolutePath() + "]");
