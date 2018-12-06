@@ -24,7 +24,7 @@ import de.unidue.ltl.recommender.server.http.InceptionRequest;
 
 public interface Predictor
 {
-    void predict(InceptionRequest req, File model) throws Exception;
+    void predict(InceptionRequest req, File model, String mode) throws Exception;
 
     List<String> getResults() throws Exception;
     

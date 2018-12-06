@@ -24,7 +24,9 @@ import static org.dkpro.tc.api.features.TcFeatureFactory.create;
 
 import java.io.File;
 
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.tc.features.ngram.CharacterNGram;
 import org.dkpro.tc.features.tcu.TargetSurfaceFormContextFeature;
@@ -47,7 +49,7 @@ public class TrainNewModel
     }
 
     public void run(String[] cas, String typesystem, String annotationName,
-                    String annotationFieldName, File targetFolder)
+                    String annotationFieldName, File targetFolder, String anchorMode)
             throws Exception {
         dkproHome();
 
@@ -55,14 +57,14 @@ public class TrainNewModel
         logger.debug("Created typesystem");
 
         startTraining(binCasInputFolder, typeSystem, targetFolder, annotationName,
-                annotationFieldName);
+                annotationFieldName, anchorMode);
         logger.debug("Training finished");
 
         cleanUp();
     }
 
     private static void startTraining(File casPredictOutput, TypeSystemDescription typeSystem,
-                                      File targetFolder, String annotationName, String annotationFieldName)
+            File targetFolder, String annotationName, String annotationFieldName, String anchorMode)
             throws Exception {
 
         CollectionReaderDescription trainReader = createReaderDescription(
@@ -84,10 +86,9 @@ public class TrainNewModel
                 .machineLearningBackend(
                         new MLBackend(new CrfSuiteAdapter(),
                                 CrfSuiteAdapter.ALGORITHM_ADAPTIVE_REGULARIZATION_OF_WEIGHT_VECTOR))
-                .preprocessing(createEngineDescription(
-                        TrainingOutcomeAnnotator.class,
-                        TrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_NAME, annotationName,
-                        TrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME, annotationFieldName))
+                .preprocessing(
+                        getModeDependentTargetDefiner(anchorMode, annotationName, annotationFieldName)
+                        )
                 .features(create(TargetSurfaceFormContextFeature.class,
                         TargetSurfaceFormContextFeature.PARAM_RELATIVE_TARGET_ANNOTATION_INDEX, -2)
                         , create(TargetSurfaceFormContextFeature.class,
@@ -102,5 +103,27 @@ public class TrainNewModel
                 )
                 .run();
 
+    }
+
+    private static AnalysisEngineDescription getModeDependentTargetDefiner(String anchoringMode,
+            String annotationName, String annotationFieldName) throws ResourceInitializationException
+    {
+        if (anchoringMode.equals("singleToken")) {
+            return createEngineDescription(SingleTokenLevelTrainingOutcomeAnnotator.class,
+                    SingleTokenLevelTrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_NAME,
+                    annotationName,
+                    SingleTokenLevelTrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME,
+                    annotationFieldName);
+        }
+        else if (anchoringMode.equals("tokens")) {
+            return createEngineDescription(MultipleTokenSpanLevelTrainingOutcomeAnnotator.class,
+                    MultipleTokenSpanLevelTrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_NAME,
+                    annotationName,
+                    MultipleTokenSpanLevelTrainingOutcomeAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME,
+                    annotationFieldName);
+        }
+       
+        
+        throw new IllegalStateException("Anchoring mode ["+anchoringMode+"] is not known - don't know what to do - failing");
     }
 }

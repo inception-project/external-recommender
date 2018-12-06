@@ -47,9 +47,11 @@ public class RoundTripTest
     String typesystem;
     String annotationName;
     String annotationFieldName;
+    String anchoringMode;
 
     File resultFolder = null;
     File modelLocation = null;
+    
 
     @Before
     public void setup() throws Exception
@@ -83,7 +85,7 @@ public class RoundTripTest
     {
         initPredict();
         PredictionWithModel pwm = new PredictionWithModel(resultFolder);
-        pwm.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
+        pwm.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation, anchoringMode);
 
         List<File> files = getFiles(resultFolder);
         assertEquals(1, files.size());
@@ -124,6 +126,7 @@ public class RoundTripTest
         typesystem = parse.get("typeSystem").getAsString();
         annotationName = metadata.get("layer").getAsString();
         annotationFieldName = metadata.get("feature").getAsString();
+        anchoringMode = metadata.get("anchoringMode").getAsString();
     }
 
     private void train() throws Exception
@@ -131,7 +134,7 @@ public class RoundTripTest
         initTrain();
         // Train Model
         TrainNewModel m = new TrainNewModel();
-        m.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation);
+        m.run(jcas, typesystem, annotationName, annotationFieldName, modelLocation, anchoringMode);
         File theModel = new File(modelLocation, Constants.MODEL_CLASSIFIER);
         
         for(File f : theModel.getParentFile().listFiles()) {
@@ -170,5 +173,6 @@ public class RoundTripTest
         typesystem = parse.get("typeSystem").getAsString();
         annotationName = metadata.get("layer").getAsString();
         annotationFieldName = metadata.get("feature").getAsString();
+        anchoringMode = metadata.get("anchoringMode").getAsString();
     }
 }

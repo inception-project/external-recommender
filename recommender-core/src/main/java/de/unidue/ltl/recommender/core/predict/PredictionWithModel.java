@@ -25,6 +25,7 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.tc.ml.model.PreTrainedModelProviderSequenceMode;
 import org.slf4j.Logger;
@@ -51,20 +52,34 @@ public class PredictionWithModel
 
     @Override
     public void run(String[] cas, String typesystem, String annotationName,
-            String annotationFieldName, File model)
+            String annotationFieldName, File model, String anchoringMode)
         throws Exception
     {
         dkproHome();
 
         TypeSystemDescription typeSystem = prepare(cas, typesystem);
 
-        startPrediction(binCasInputFolder, typeSystem, model, annotationName, annotationFieldName);
+        startPrediction(binCasInputFolder, typeSystem, model,
+                getResultWriter(anchoringMode, annotationName, annotationFieldName));
 
         cleanUp();
     }
 
+    private AnalysisEngineDescription getResultWriter(String mode, String annotationName,
+            String annotationFieldName)
+        throws ResourceInitializationException
+    {
+        if(mode.equals("singleToken")) {
+            return getSingleTokenLevelResultWriter(annotationName, annotationFieldName);
+        }else if (mode.equals("tokens")) {
+            return getSingleTokenLevelResultWriter(annotationName, annotationFieldName);
+        }
+        throw new IllegalStateException("Received mode [" + mode
+                + "] which is not implemented - don't know what to do - failing");
+    }
+
     private void startPrediction(File casPredictOutput, TypeSystemDescription typeSystem,
-            File model, String annotationName, String annotationFieldName)
+            File model, AnalysisEngineDescription resultWriter)
         throws Exception
     {
 
@@ -88,13 +103,29 @@ public class PredictionWithModel
                 Token.class.getName(), PreTrainedModelProviderSequenceMode.PARAM_TC_MODEL_LOCATION,
                 model, PreTrainedModelProviderSequenceMode.PARAM_RETAIN_TARGETS, false);
 
-        AnalysisEngineDescription resultWriter = AnalysisEngineFactory.createEngineDescription(
-                ResultWriterAnnotator.class, ResultWriterAnnotator.PARAM_ANNOTATION_TARGET_NAME,
-                annotationName, ResultWriterAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME,
-                annotationFieldName, ResultWriterAnnotator.PARAM_OUTPUT_FOLDER, predictionOutput,
-                ResultWriterAnnotator.PARAM_DEBUG_SYS_OUT, true,
-                ResultWriterAnnotator.PARAM_MERGE_ADJACENT_ANNOTATIONS, true);
 
         SimplePipeline.runPipeline(reader, tcAnnotation, annotator, resultWriter);
+    }
+    
+    AnalysisEngineDescription getSingleTokenLevelResultWriter(String annotationName, String annotationFieldName) throws ResourceInitializationException {
+        return AnalysisEngineFactory.createEngineDescription(
+                TokenResultWriterAnnotator.class, 
+                TokenResultWriterAnnotator.PARAM_ANNOTATION_TARGET_NAME,
+                annotationName, 
+                TokenResultWriterAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME,
+                annotationFieldName, 
+                TokenResultWriterAnnotator.PARAM_OUTPUT_FOLDER, predictionOutput,
+                TokenResultWriterAnnotator.PARAM_MERGE_ADJACENT_ANNOTATIONS, false);
+    }
+    
+    AnalysisEngineDescription getMultiTokenSpanLevelResultWriter(String annotationName, String annotationFieldName) throws ResourceInitializationException {
+        return AnalysisEngineFactory.createEngineDescription(
+                TokenResultWriterAnnotator.class, 
+                TokenResultWriterAnnotator.PARAM_ANNOTATION_TARGET_NAME,
+                annotationName, 
+                TokenResultWriterAnnotator.PARAM_ANNOTATION_TARGET_FIELD_NAME,
+                annotationFieldName, 
+                TokenResultWriterAnnotator.PARAM_OUTPUT_FOLDER, predictionOutput,
+                TokenResultWriterAnnotator.PARAM_MERGE_ADJACENT_ANNOTATIONS, true);
     }
 }

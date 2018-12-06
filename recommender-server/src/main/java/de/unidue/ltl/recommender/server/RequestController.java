@@ -144,7 +144,7 @@ public class RequestController
         }
 
         try {
-            String response = prediction(predictionRequest.toInceptionRequest());
+            String response = prediction(predictionRequest.toInceptionRequest(), predictionRequest.getMetadata().getAnchoringMode());
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e) {
@@ -166,10 +166,10 @@ public class RequestController
 
     }
 
-    private String prediction(InceptionRequest inceptionReq) throws Exception
+    private String prediction(InceptionRequest inceptionReq, String mode) throws Exception
     {
         InceptionRecommenderModel model = repository.getModel(inceptionReq.getLayer());
-        predictor.predict(inceptionReq, model.getFileSystemLocation());
+        predictor.predict(inceptionReq, model.getFileSystemLocation(), mode);
 
         releaseModelUpdateSemaphore();
         return predictor.getResultsAsJson();

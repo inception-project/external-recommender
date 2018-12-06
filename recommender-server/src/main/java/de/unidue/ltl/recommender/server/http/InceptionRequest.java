@@ -24,6 +24,7 @@ public class InceptionRequest
     private String typeSystem;
     private String layer;
     private String feature;
+    private String anchoringMode;
 
     public String [] getDocuments()
     {
@@ -40,6 +41,14 @@ public class InceptionRequest
     public String getTypeSystem()
     {
         return typeSystem;
+    }
+    
+    public void setAnchoringMode(String anchoringMode){
+        this.anchoringMode = anchoringMode;
+    }
+    
+    public String getAnchoringMode(){
+        return this.anchoringMode;
     }
 
 
